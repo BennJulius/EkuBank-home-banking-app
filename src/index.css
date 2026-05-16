@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bbva-navy: #072146;
+  --color-bbva-blue: #1973B8;
+  --color-bbva-light: #F4F4F4;
+}
