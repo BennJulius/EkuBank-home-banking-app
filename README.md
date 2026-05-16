@@ -1,16 +1,17 @@
-# React + Vite
+# BBVA Home Banking - Desarrollo de Aplicaciones Web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este proyecto es una simulación del Home Banking del BBVA Perú, desarrollado para la evaluación del curso.
 
-Currently, two official plugins are available:
+## Arquitectura
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+* **Frontend:** Desarrollado con React, Vite y Tailwind CSS (SPA).
+* **Backend (API):** Implementado con PHP nativo siguiendo una estructura MVC (Model-View-Controller) para una gestión modular. Desplegado en un subdominio de Hostinger.
+* **Base de Datos:** MySQL gestionada a través de phpMyAdmin en Hostinger. Conexión mediante PDO para mayor seguridad y prevención de inyección SQL.
 
-## React Compiler
+## Flujo de Autenticación (Evaluación C4)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Para probar la conexión en vivo con la base de datos de producción, utilice las siguientes credenciales de prueba:
+* **DNI:** 12345678
+* **Contraseña:** 123456
 
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+> **Nota de Seguridad:** El archivo `database.php` en este repositorio público contiene credenciales de ejemplo. Las credenciales reales se encuentran configuradas de forma segura y aislada en el servidor de Hostinger.
