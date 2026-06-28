@@ -1,13 +1,48 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import EkuBankLogo from '../EkuBankLogo';
 
-const Login = ({ onNavigateToHome, onLoginSuccess }) => {
+const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
   const [docType, setDocType] = useState('DNI');
   const [docNumber, setDocNumber] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('ekubank_login_block');
+    if (stored) {
+      const until = parseInt(stored, 10);
+      const remaining = Math.ceil((until - Date.now()) / 1000);
+      if (remaining > 0) {
+        setBloqueado(true);
+        setCountdown(remaining);
+        setError(`Cuenta bloqueada por seguridad. Espera ${Math.ceil(remaining / 60)} minuto(s).`);
+      } else {
+        localStorage.removeItem('ekubank_login_block');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!bloqueado || countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setBloqueado(false);
+          setError('');
+          localStorage.removeItem('ekubank_login_block');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [bloqueado, countdown]);
 
   // Nueva función para manejar el cambio de tipo de documento
   const handleDocTypeChange = (e) => {
@@ -38,8 +73,12 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
-    // Validación adicional antes de enviar al servidor
+
+    if (bloqueado) {
+      setError(`Cuenta bloqueada. Espera ${Math.ceil(countdown / 60)} minuto(s).`);
+      return;
+    }
+
     if (docType === 'DNI' && docNumber.length < 8) {
       setError('El DNI debe tener 8 dígitos obligatoriamente.');
       return;
@@ -52,7 +91,7 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
     setIsLoading(true);
 
     try {
-      const apiUrl = 'https://bbva.ekubyte.com/api/controllers/AuthController.php';
+      const apiUrl = 'https://ekubank.ekubyte.net.pe/api/controllers/AuthController.php';
 
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -63,16 +102,24 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
       const data = await response.json();
 
       if (data.success) {
+        localStorage.removeItem('ekubank_login_block');
         onLoginSuccess({
           nombre: data.user.nombre,
           dni: data.user.dni,
           saldo: data.user.saldo,
+          token: data.user.token,
         });
+      } else if (data.bloqueado) {
+        const blockUntil = Date.now() + (data.segundos_restantes * 1000);
+        localStorage.setItem('ekubank_login_block', blockUntil.toString());
+        setBloqueado(true);
+        setCountdown(data.segundos_restantes);
+        setError(data.message);
       } else {
         setError(data.message || 'Datos incorrectos. Verifica tu documento y contraseña.');
       }
     } catch (err) {
-      setError('Error de conexión con el servidor BBVA (Base de datos).');
+      setError('Error de conexión con el servidor EkuBank (Base de datos).');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -81,6 +128,11 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
 
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[#F2F4F7] flex flex-col relative overflow-hidden">
+      {/* ── ALERTA ENTORNO ACADÉMICO / SIMULACIÓN ── */}
+      <div className="bg-amber-500 text-white text-center py-2.5 px-4 text-[12px] font-bold shadow-sm relative z-50 flex items-center justify-center gap-2">
+        <span>🎓</span>
+        <span>ATENCIÓN: Este sitio es una SIMULACIÓN ACADÉMICA de banca por internet para un proyecto de la Universidad. No es un banco real.</span>
+      </div>
 
       {/* Decorative background circles */}
       <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-[#004481] opacity-[0.06] pointer-events-none" />
@@ -88,10 +140,7 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
 
       {/* Header */}
       <header className="w-full bg-[#004481] h-[60px] px-7 flex items-center justify-between relative z-10 shadow-md">
-        <div className="flex items-center gap-2.5">
-          <span className="text-white text-[22px] font-semibold tracking-[2px]">BBVA</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#49D0A0]" />
-        </div>
+        <EkuBankLogo size={140} color="#ffffff" withDot />
         <button
           onClick={onNavigateToHome}
           className="text-white/70 text-[13px] font-medium hover:text-white transition-colors flex items-center gap-1.5"
@@ -183,10 +232,14 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
                   <div className="flex items-center border-[1.5px] border-[#E0E6ED] rounded-[10px] overflow-hidden bg-[#F8FAFC] focus-within:border-[#1973B8] focus-within:shadow-[0_0_0_3px_rgba(25,115,184,0.12)] focus-within:bg-white transition-all relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      className="flex-1 border-none outline-none text-[16px] text-[#1A2B4A] bg-transparent pl-3.5 pr-16 h-[46px] tracking-[0.15em] font-mono placeholder:font-sans placeholder:text-[14px] placeholder:tracking-normal placeholder:text-[#B0BEC5]"
-                      placeholder="••••••"
+                      inputMode="numeric"
+                      className="flex-1 border-none outline-none text-[18px] text-[#1A2B4A] bg-transparent pl-3.5 pr-16 h-[46px] tracking-[0.25em] font-mono text-center placeholder:font-sans placeholder:text-[14px] placeholder:tracking-normal placeholder:text-[#B0BEC5] placeholder:text-left"
+                      placeholder="6 dígitos"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value.replace(/[^0-9]/g, '');
+                        if (v.length <= 6) setPassword(v);
+                      }}
                       maxLength={6}
                       required
                     />
@@ -201,9 +254,19 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
                 </motion.div>
 
                 {/* Submit */}
+                {bloqueado && countdown > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                    className="bg-amber-50 border-l-[3px] border-amber-500 rounded-r-lg p-3 text-[12.5px] font-medium text-amber-800 flex items-center gap-2"
+                  >
+                    <span className="text-[16px]">🔒</span>
+                    <span>Reintenta en <strong>{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</strong></span>
+                  </motion.div>
+                )}
+
                 <motion.button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || bloqueado}
                   initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
                   whileTap={{ scale: 0.98 }}
                   className="w-full h-12 rounded-[10px] bg-[#004481] hover:bg-[#1565C0] text-white text-[14px] font-semibold tracking-[0.5px] flex items-center justify-center gap-2 transition-colors disabled:opacity-65 disabled:cursor-not-allowed mt-2 overflow-hidden relative"
@@ -213,17 +276,27 @@ const Login = ({ onNavigateToHome, onLoginSuccess }) => {
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Consultando...
                     </>
+                  ) : bloqueado ? (
+                    '🔒 Cuenta bloqueada temporalmente'
                   ) : (
                     'Entrar a mi cuenta'
                   )}
                 </motion.button>
               </form>
 
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="text-center mt-6">
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}
+                className="text-center mt-4 flex flex-col gap-2"
+              >
                 <a href="#" className="text-[#1973B8] text-[12.5px] font-medium hover:text-[#004481] transition-colors">
                   ¿Olvidaste tu contraseña?
                 </a>
+                {/* NUEVO BOTÓN DE REGISTRO */}
+                <button onClick={onNavigateToRegister} className="text-gray-600 text-[12.5px] font-bold hover:text-[#1973B8] transition-colors">
+                  ¿No tienes cuenta? Regístrate aquí
+                </button>
               </motion.div>
+
             </div>
           </div>
         </motion.div>

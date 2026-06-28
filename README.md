@@ -1,6 +1,6 @@
-# BBVA Home Banking - Desarrollo de Aplicaciones Web
+# EkuBank Home Banking - Desarrollo de Aplicaciones Web
 
-Este proyecto es una simulación del Home Banking del BBVA Perú, desarrollado para la evaluación del curso.
+Este proyecto es una simulación del Home Banking de EkuBank, desarrollado para la evaluación del curso.
 
 ## Arquitectura
 

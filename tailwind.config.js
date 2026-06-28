@@ -7,9 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        'bbva-navy': '#072146', 
-        'bbva-blue': '#1973B8', 
-        'bbva-light': '#F4F4F4', 
+        'ekubank-navy': '#072146', 
+        'ekubank-blue': '#1973B8', 
+        'ekubank-light': '#F4F4F4', 
       }
     },
   },
