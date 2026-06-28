@@ -6,7 +6,6 @@ import Dashboard from './components/cliente/Dashboard';
 import LoginEmpleado from './components/asesor/LoginEmpleado';
 import CoreDashboard from './components/asesor/CoreDashboard';
 import TarjetaView from './components/cliente/TarjetaView';
-import GuiaEvaluacion from './components/GuiaEvaluacion';
 
 function App() {
   const [currentView, setCurrentView] = useState('home');
@@ -98,7 +97,6 @@ function App() {
       {currentView === 'core_asesor' && (
         <CoreDashboard empleado={empleadoData} onLogout={handleEmpleadoLogout} />
       )}
-      <GuiaEvaluacion />
     </>
   );
 }
