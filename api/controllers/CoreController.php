@@ -140,6 +140,7 @@ try {
     $clientes_lista = $db->query("
         SELECT
             CONCAT(SUBSTRING(p.nombres, 1, 1), '. ', p.apellidos) as nombre_corto,
+            p.dni,
             p.departamento,
             p.ingreso_promedio as ingreso,
             p.segmento_preliminar as segmento,

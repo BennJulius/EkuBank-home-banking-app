@@ -85,18 +85,22 @@ const P2Perfil = ({ apiData }) => {
             <table className="w-full text-left">
               <thead><tr className="bg-[#F7F8FA]">
                 <th className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.5px] px-4 py-2.5">Cliente</th>
+                <th className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.5px] px-4 py-2.5">DNI</th>
                 <th className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.5px] px-4 py-2.5">Dpto.</th>
                 <th className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.5px] px-4 py-2.5 text-right">Ingreso</th>
+                <th className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.5px] px-4 py-2.5 text-right">Score</th>
                 <th className="text-[10px] text-gray-400 font-semibold uppercase tracking-[0.5px] px-4 py-2.5 text-center">Seg.</th>
               </tr></thead>
               <tbody className="divide-y divide-[#F0F2F5]">
                 {filteredClientes.length === 0 ? (
-                  <tr><td colSpan={4} className="px-4 py-6 text-center text-[12px] text-gray-400">Sin datos de clientes para este filtro</td></tr>
-                ) : filteredClientes.slice(0, 8).map((c, i) => (
+                  <tr><td colSpan={6} className="px-4 py-6 text-center text-[12px] text-gray-400">Sin datos de clientes para este filtro</td></tr>
+                ) : filteredClientes.slice(0, 20).map((c, i) => (
                   <tr key={i} className="hover:bg-[#FAFBFC] transition-colors">
                     <td className="px-4 py-2.5 text-[12px] font-semibold text-[#072146]">{c.nombre_corto}</td>
+                    <td className="px-4 py-2.5 text-[12px] font-mono text-gray-500">{c.dni || '—'}</td>
                     <td className="px-4 py-2.5 text-[12px] text-gray-500">{c.departamento || '—'}</td>
                     <td className="px-4 py-2.5 text-[12px] text-right font-medium">S/ {Number(c.ingreso).toLocaleString()}</td>
+                    <td className="px-4 py-2.5 text-[12px] text-right font-bold text-[#004481]">{c.score}</td>
                     <td className="px-4 py-2.5 text-center"><Badge variant={c.segmento}>{c.segmento}</Badge></td>
                   </tr>
                 ))}
