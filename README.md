@@ -16,13 +16,20 @@ Para evaluar la interacción completa y el flujo de aprobación de créditos, ut
    * **Contraseña:** `123456`
 2. Desde el panel, diríjase a la sección **Préstamos** y realice una solicitud de crédito (ej. S/ 5,000 a 12 meses).
 
-### 👔 2. Flujo del Asesor (Evaluador)
-1. Cierre sesión de cliente e ingrese a **Acceso colaboradores** (enlace en el pie de página de la web).
-2. Inicie sesión con el rol de **Asesor Financiero**:
+### 👔 2. Flujo del Asesor (Filtro 1 - Evaluación)
+1. Cierre la sesión de cliente e ingrese a **Acceso colaboradores** (enlace en el pie de página de la web).
+2. Inicie sesión con las credenciales de **Asesor Financiero (Evaluador)**:
    * **Código de Colaborador:** `EMP00001`
    * **Contraseña:** `654321`
-3. En el panel de control del asesor verá la solicitud pendiente. Podrá ingresar los montos evaluados, observaciones y **Aprobar** o **Rechazar** el crédito.
-4. Si lo aprueba, al volver a iniciar sesión como **Cliente (DNI 12345678)** verá reflejado el desembolso directamente incrementando su saldo disponible en tiempo real.
+3. En el panel de control, abra la solicitud de préstamo del cliente y complete la propuesta (ingresos evaluados, gastos evaluados, decisión recomendada y observaciones). Haga clic en **Enviar Propuesta**. El préstamo permanecerá en estado *Pendiente* pero ahora tendrá una recomendación adjunta.
+
+### 🏛️ 3. Flujo del Administrador (Filtro 2 - Aprobación/Rechazo Definitivo)
+1. Cierre la sesión de asesor e ingrese nuevamente a **Acceso colaboradores**.
+2. Inicie sesión con las credenciales del **Administrador del Core (Comité de Riesgos)**:
+   * **Código de Colaborador:** `EMP00002`
+   * **Contraseña:** `654321`
+3. En el panel verá la solicitud marcada con la propuesta del asesor. Al abrirla, podrá revisar los datos del primer filtro y tomar la decisión final haciendo clic en **Aprobar** o **Rechazar**.
+4. Si el Administrador aprueba el préstamo, se realiza el desembolso automático. Al iniciar sesión como **Cliente (DNI 12345678)** verá reflejado su saldo disponible actualizado y la transacción de desembolso registrada.
 
 ---
 
