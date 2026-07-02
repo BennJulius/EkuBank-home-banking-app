@@ -31,10 +31,6 @@ if ($action === 'transferir') {
         echo json_encode(["success" => false, "message" => "Datos incompletos."]);
         exit;
     }
-    if ($dniOrigen === $dniDestino) {
-        echo json_encode(["success" => false, "message" => "No puedes transferirte a ti mismo."]);
-        exit;
-    }
 
     try {
         $db->beginTransaction();
@@ -47,12 +43,28 @@ if ($action === 'transferir') {
         if (!$origen) { $db->rollBack(); echo json_encode(["success" => false, "message" => "Cuenta origen no encontrada."]); exit; }
         if ($origen['saldo'] < $monto) { $db->rollBack(); echo json_encode(["success" => false, "message" => "Saldo insuficiente. Disponible: S/ " . number_format($origen['saldo'], 2)]); exit; }
 
-        // Buscar cuenta destino
-        $stD = $db->prepare("SELECT c.id, c.user_id FROM cuentas c JOIN perfiles_clientes p ON c.user_id = p.user_id WHERE p.dni = ? LIMIT 1");
-        $stD->execute([$dniDestino]);
+        // Buscar cuenta destino (por DNI o por Número de cuenta)
+        $stD = $db->prepare("
+            SELECT c.id, c.user_id, p.dni, c.numero_cuenta 
+            FROM cuentas c 
+            JOIN perfiles_clientes p ON c.user_id = p.user_id 
+            WHERE p.dni = ? OR c.numero_cuenta = ? 
+            LIMIT 1
+        ");
+        $stD->execute([$dniDestino, $dniDestino]);
         $destino = $stD->fetch(PDO::FETCH_ASSOC);
 
-        if (!$destino) { $db->rollBack(); echo json_encode(["success" => false, "message" => "El DNI destino no existe en EkuBank."]); exit; }
+        if (!$destino) { 
+            $db->rollBack(); 
+            echo json_encode(["success" => false, "message" => "El destinatario (DNI o Número de cuenta) no existe en EkuBank."]); 
+            exit; 
+        }
+
+        if ($origen['user_id'] === $destino['user_id']) {
+            $db->rollBack();
+            echo json_encode(["success" => false, "message" => "No puedes transferirte a ti mismo."]);
+            exit;
+        }
 
         // Debitar origen
         $db->prepare("UPDATE cuentas SET saldo = saldo - ? WHERE id = ?")->execute([$monto, $origen['id']]);
@@ -60,9 +72,12 @@ if ($action === 'transferir') {
         // Acreditar destino
         $db->prepare("UPDATE cuentas SET saldo = saldo + ? WHERE id = ?")->execute([$monto, $destino['id']]);
 
+        // Formatear identificador de destino para la descripción
+        $destIdentificador = (strlen($dniDestino) <= 8) ? "DNI " . $destino['dni'] : "Cta " . $destino['numero_cuenta'];
+
         // Registrar transacción origen (débito)
         $db->prepare("INSERT INTO transacciones (user_id, descripcion, tipo, monto, canal) VALUES (?, ?, 'debito', ?, 'homebanking')")
-           ->execute([$origen['user_id'], "Transferencia a DNI " . $dniDestino . " - " . $descripcion, $monto]);
+           ->execute([$origen['user_id'], "Transferencia a " . $destIdentificador . " - " . $descripcion, $monto]);
 
         // Registrar transacción destino (crédito)
         $db->prepare("INSERT INTO transacciones (user_id, descripcion, tipo, monto, canal) VALUES (?, ?, 'credito', ?, 'homebanking')")

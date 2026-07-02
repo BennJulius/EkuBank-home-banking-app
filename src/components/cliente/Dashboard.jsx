@@ -151,11 +151,18 @@ const PanelTransferir = ({ userDni, userToken, saldoDisponible, onDone, onClose 
   const [confirmData, setConfirmData] = useState(null);
   const [alertData, setAlertData] = useState(null);
 
-  const handleDni = (e) => { const v = e.target.value.replace(/[^0-9]/g, ''); if (v.length <= 8) setDniDestino(v); };
+  const handleDestino = (e) => {
+    const v = e.target.value.replace(/[^0-9-]/g, '');
+    if (v.length <= 15) setDniDestino(v);
+  };
 
   const submit = (e) => {
     e.preventDefault();
-    if (dniDestino.length < 8) { setMsg('El DNI destino debe tener 8 dígitos.'); return; }
+    const limpio = dniDestino.replace(/-/g, '');
+    if (limpio.length < 8) {
+      setMsg('Ingresa un DNI (8 dígitos) o número de cuenta válido (Ej. 019-1234567).');
+      return;
+    }
     const m = parseFloat(monto);
     if (m <= 0) { setMsg('Ingresa un monto válido.'); return; }
     if (m > saldoDisponible) {
@@ -194,8 +201,8 @@ const PanelTransferir = ({ userDni, userToken, saldoDisponible, onDone, onClose 
           <SuccessMsg msg={msg} onClose={onClose} />
         ) : (
           <form onSubmit={submit} className="space-y-4">
-            <Field label="DNI del destinatario">
-              <input type="text" inputMode="numeric" placeholder="12345678" value={dniDestino} onChange={handleDni} maxLength={8} required className={inputClass} />
+            <Field label="DNI o Número de cuenta del destinatario">
+              <input type="text" placeholder="Ej. 12345678 o 019-1234567" value={dniDestino} onChange={handleDestino} maxLength={15} required className={inputClass} />
             </Field>
             <Field label="Monto a transferir (S/)">
               <input type="number" placeholder="100.00" value={monto} onChange={(e) => setMonto(e.target.value)} min="0.01" step="0.01" required className={inputClass} />
@@ -248,7 +255,7 @@ const PanelTransferir = ({ userDni, userToken, saldoDisponible, onDone, onClose 
                     <span className="font-semibold text-[#072146] font-mono">{userDni} (Tú)</span>
                   </div>
                   <div className="flex justify-between items-center text-[12px]">
-                    <span className="text-gray-400 font-medium">Para DNI</span>
+                    <span className="text-gray-400 font-medium">Destinatario (DNI/Cuenta)</span>
                     <span className="font-bold text-[#072146] font-mono">{confirmData.destino}</span>
                   </div>
                   <div className="flex justify-between items-center text-[12px]">
