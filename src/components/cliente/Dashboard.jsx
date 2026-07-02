@@ -363,6 +363,12 @@ const PanelTransferir = ({ userDni, userToken, saldoDisponible, onDone, onClose 
                         maxLength={6} 
                         value={userTokenInput}
                         onChange={(e) => setUserTokenInput(e.target.value.replace(/[^0-9]/g, ''))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleFinalConfirm();
+                          }
+                        }}
                         className="w-full text-center text-[16px] font-bold tracking-[0.1em] font-mono h-11 border-[1.5px] border-[#E0E6ED] rounded-[10px] outline-none focus:border-[#004481]"
                       />
                       {tokenError && <p className="text-red-600 text-[11px] font-medium text-center">{tokenError}</p>}
@@ -788,6 +794,12 @@ const PanelServicios = ({ userDni, userToken, saldoDisponible, onDone, onClose }
                         maxLength={6} 
                         value={userTokenInput}
                         onChange={(e) => setUserTokenInput(e.target.value.replace(/[^0-9]/g, ''))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            executePagoServicio();
+                          }
+                        }}
                         className="w-full text-center text-[16px] font-bold tracking-[0.1em] font-mono h-11 border-[1.5px] border-[#E0E6ED] rounded-[10px] outline-none focus:border-[#004481]"
                       />
                       {tokenError && <p className="text-red-600 text-[11px] font-medium text-center">{tokenError}</p>}
