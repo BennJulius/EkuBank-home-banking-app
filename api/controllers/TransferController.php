@@ -297,6 +297,7 @@ elseif ($action === 'pagar_cuota') {
     } catch (Exception $e) {
         $db->rollBack();
         echo json_encode(["success" => false, "message" => "Error al procesar el pago de la cuota."]);
+    }
 }
 
 // ============================================

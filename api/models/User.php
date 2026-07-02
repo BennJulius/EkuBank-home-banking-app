@@ -12,7 +12,7 @@ class User {
                   FROM usuarios_mock u
                   JOIN perfiles_clientes p ON u.id = p.user_id
                   LEFT JOIN cuentas c ON u.id = c.user_id
-                  WHERE p.dni = :dni OR REPLACE(c.numero_cuenta, '019-', '') = SUBSTRING(:dni, 7, 7)
+                  WHERE p.dni = :dni OR (LENGTH(:dni) = 16 AND REPLACE(c.numero_cuenta, '019-', '') = SUBSTRING(:dni, 7, 7))
                   LIMIT 1";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':dni', $this->dni);
