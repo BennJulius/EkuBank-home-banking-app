@@ -1323,6 +1323,7 @@ const Dashboard = ({ user, onLogout }) => {
               ) : (
                 activeMovimientos.map((tx, i) => {
                   const cat = categoryStyle[tx.category] || categoryStyle.shop;
+                  const classification = getTxClassification(tx);
                   const isPos = parseFloat(tx.amount) > 0;
                   return (
                     <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
