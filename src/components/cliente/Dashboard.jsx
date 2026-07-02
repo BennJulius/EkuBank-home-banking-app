@@ -101,6 +101,32 @@ const renderFilterIcon = (key, className = "w-4 h-4") => {
   }
 };
 
+const downloadReceipt = (txDetails) => {
+  const element = document.createElement("a");
+  const receiptId = txDetails.id || `CCI-${Math.floor(100000000 + Math.random() * 900000000)}`;
+  const content = `====================================================
+                  EKUBANK PERÚ
+              CONSTANCIA DE OPERACIÓN
+====================================================
+Fecha: ${txDetails.date || new Date().toLocaleString('es-PE')}
+Tipo de operación: ${txDetails.type || 'Pago/Transferencia'}
+Operación ID: ${receiptId}
+Canal de operación: ${txDetails.canal || 'Banca por Internet'}
+Estado: PROCESADO - EXITOSO
+----------------------------------------------------
+Detalle: ${txDetails.description}
+Monto: S/ ${Math.abs(Number(txDetails.amount || 0)).toFixed(2)}
+----------------------------------------------------
+¡Gracias por confiar en EkuBank!
+====================================================`;
+  const file = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  element.href = URL.createObjectURL(file);
+  element.download = `Constancia_EkuBank_${receiptId}.txt`;
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+};
+
 const renderActionIcon = (key, className = "w-5 h-5") => {
   switch (key) {
     case 'transferir':
@@ -127,6 +153,12 @@ const renderActionIcon = (key, className = "w-5 h-5") => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       );
+    case 'servicios':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      );
     default:
       return null;
   }
@@ -150,6 +182,27 @@ const PanelTransferir = ({ userDni, userToken, saldoDisponible, onDone, onClose 
   const [loading, setLoading] = useState(false);
   const [confirmData, setConfirmData] = useState(null);
   const [alertData, setAlertData] = useState(null);
+
+  const [tokenStep, setTokenStep] = useState('details'); // 'details' | 'token'
+  const [simulatedToken, setSimulatedToken] = useState('');
+  const [userTokenInput, setUserTokenInput] = useState('');
+  const [tokenError, setTokenError] = useState('');
+
+  const handleProceedToToken = () => {
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setSimulatedToken(randomCode);
+    setTokenStep('token');
+    setUserTokenInput('');
+    setTokenError('');
+  };
+
+  const handleFinalConfirm = () => {
+    if (userTokenInput !== simulatedToken) {
+      setTokenError('Token Digital incorrecto. Por favor, verifica el código.');
+      return;
+    }
+    executeTransfer();
+  };
 
   const handleDestino = (e) => {
     const v = e.target.value.replace(/[^0-9-]/g, '');
@@ -243,40 +296,90 @@ const PanelTransferir = ({ userDni, userToken, saldoDisponible, onDone, onClose 
                 <h3 className="text-[15px] font-bold">Transferencia Interbancaria/EkuBank</h3>
               </div>
               <div className="p-6">
-                <div className="w-12 h-12 rounded-full bg-[#EEF3FB] text-[#004481] flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                  </svg>
-                </div>
-                <p className="text-[13px] text-center text-gray-500 mb-5">Por favor, confirma los detalles de la transferencia bancaria:</p>
-                <div className="bg-[#F8FAFC] border border-[#E0E6ED] rounded-[12px] p-4 mb-6 space-y-3">
-                  <div className="flex justify-between items-center text-[12px]">
-                    <span className="text-gray-400 font-medium">Desde cuenta</span>
-                    <span className="font-semibold text-[#072146] font-mono">{userDni} (Tú)</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[12px]">
-                    <span className="text-gray-400 font-medium">Destinatario (DNI/Cuenta)</span>
-                    <span className="font-bold text-[#072146] font-mono">{confirmData.destino}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[12px]">
-                    <span className="text-gray-400 font-medium">Concepto</span>
-                    <span className="font-medium text-gray-600 truncate max-w-[180px]">{confirmData.descripcion}</span>
-                  </div>
-                  <div className="border-t border-[#E0E6ED] pt-3 flex justify-between items-center">
-                    <span className="text-[12px] text-[#004481] font-bold uppercase tracking-[0.5px]">Monto a Transferir</span>
-                    <span className="text-[18px] font-black text-[#004481] font-mono">S/ {confirmData.monto.toFixed(2)}</span>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button type="button" onClick={() => setConfirmData(null)}
-                    className="flex-1 h-11 border-[1.5px] border-[#E0E6ED] text-[#004481] hover:bg-[#F0F5FB] text-[13px] font-semibold rounded-[10px] transition-all">
-                    Cancelar
-                  </button>
-                  <button type="button" onClick={executeTransfer} disabled={loading}
-                    className="flex-1 h-11 bg-[#004481] hover:bg-[#1565C0] text-white text-[13px] font-semibold rounded-[10px] transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg">
-                    {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirmar'}
-                  </button>
-                </div>
+                {tokenStep === 'details' ? (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-[#EEF3FB] text-[#004481] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] text-center text-gray-500 mb-5">Por favor, confirma los detalles de la transferencia bancaria:</p>
+                    <div className="bg-[#F8FAFC] border border-[#E0E6ED] rounded-[12px] p-4 mb-6 space-y-3">
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-gray-400 font-medium">Desde cuenta</span>
+                        <span className="font-semibold text-[#072146] font-mono">{userDni} (Tú)</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-gray-400 font-medium">Destinatario (DNI/Cuenta)</span>
+                        <span className="font-bold text-[#072146] font-mono">{confirmData.destino}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-gray-400 font-medium">Concepto</span>
+                        <span className="font-medium text-gray-600 truncate max-w-[180px]">{confirmData.descripcion}</span>
+                      </div>
+                      <div className="border-t border-[#E0E6ED] pt-3 flex justify-between items-center">
+                        <span className="text-[12px] text-[#004481] font-bold uppercase tracking-[0.5px]">Monto a Transferir</span>
+                        <span className="text-[18px] font-black text-[#004481] font-mono">S/ {confirmData.monto.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => setConfirmData(null)}
+                        className="flex-1 h-11 border-[1.5px] border-[#E0E6ED] text-[#004481] hover:bg-[#F0F5FB] text-[13px] font-semibold rounded-[10px] transition-all">
+                        Cancelar
+                      </button>
+                      <button type="button" onClick={handleProceedToToken}
+                        className="flex-1 h-11 bg-[#004481] hover:bg-[#1565C0] text-white text-[13px] font-semibold rounded-[10px] transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer">
+                        Confirmar
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-[#E6F7F0] text-[#0F6E56] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] text-center text-gray-500 mb-4">Se requiere autorización con tu **Token Digital** de seguridad:</p>
+                    
+                    {/* Simulador de token de celular */}
+                    <div className="bg-[#FEF3C7] border border-[#D97706]/20 rounded-xl p-3 mb-4 text-[11px] text-[#92400E]">
+                      <p className="font-bold flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Token Digital autogenerado en tu celular:
+                      </p>
+                      <p className="text-[16px] font-black text-center mt-1 tracking-[0.2em] font-mono bg-white/60 py-1 rounded">
+                        {simulatedToken.substring(0, 3)} {simulatedToken.substring(3)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-3 mb-5">
+                      <label className="block text-[10.5px] font-semibold text-[#004481] tracking-[0.5px] uppercase">Introduce el código del Token</label>
+                      <input 
+                        type="text" 
+                        placeholder="Escribe los 6 dígitos" 
+                        maxLength={6} 
+                        value={userTokenInput}
+                        onChange={(e) => setUserTokenInput(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="w-full text-center text-[16px] font-bold tracking-[0.1em] font-mono h-11 border-[1.5px] border-[#E0E6ED] rounded-[10px] outline-none focus:border-[#004481]"
+                      />
+                      {tokenError && <p className="text-red-600 text-[11px] font-medium text-center">{tokenError}</p>}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => { setTokenStep('details'); setTokenError(''); }}
+                        className="flex-1 h-11 border-[1.5px] border-[#E0E6ED] text-[#004481] hover:bg-[#F0F5FB] text-[13px] font-semibold rounded-[10px] transition-all">
+                        Atrás
+                      </button>
+                      <button type="button" onClick={handleFinalConfirm} disabled={loading}
+                        className="flex-1 h-11 bg-[#004481] hover:bg-[#1565C0] text-white text-[13px] font-semibold rounded-[10px] transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer">
+                        {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirmar y Transferir'}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
@@ -430,6 +533,278 @@ const PanelRecargar = ({ userDni, userToken, saldoDisponible, onDone, onClose })
                     {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirmar'}
                   </button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+const PanelServicios = ({ userDni, userToken, saldoDisponible, onDone, onClose }) => {
+  const [servicio, setServicio] = useState('Enel (Luz)');
+  const [suministro, setSuministro] = useState('');
+  const [msg, setMsg] = useState('');
+  const [ok, setOk] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [confirmData, setConfirmData] = useState(null);
+  const [alertData, setAlertData] = useState(null);
+
+  const [tokenStep, setTokenStep] = useState('details'); // 'details' | 'token'
+  const [simulatedToken, setSimulatedToken] = useState('');
+  const [userTokenInput, setUserTokenInput] = useState('');
+  const [tokenError, setTokenError] = useState('');
+  const [receiptDetails, setReceiptDetails] = useState(null);
+
+  const getMontoServicio = (serv) => {
+    if (serv.includes('Luz')) return 84.60;
+    if (serv.includes('Agua')) return 42.10;
+    return 119.90; // Internet
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (suministro.length < 6) {
+      setMsg('El código de suministro/cliente debe tener al menos 6 dígitos.');
+      return;
+    }
+    const m = getMontoServicio(servicio);
+    if (m > saldoDisponible) {
+      setAlertData({
+        title: 'Saldo Insuficiente',
+        message: `No tienes saldo suficiente para pagar S/ ${m.toFixed(2)}. Tu saldo disponible es S/ ${saldoDisponible.toFixed(2)}.`
+      });
+      return;
+    }
+    setConfirmData({
+      servicio,
+      suministro,
+      monto: m
+    });
+    setTokenStep('details');
+  };
+
+  const handleProceedToToken = () => {
+    const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
+    setSimulatedToken(randomCode);
+    setTokenStep('token');
+    setUserTokenInput('');
+    setTokenError('');
+  };
+
+  const executePagoServicio = async () => {
+    if (userTokenInput !== simulatedToken) {
+      setTokenError('Token Digital incorrecto. Por favor, verifica el código.');
+      return;
+    }
+
+    setLoading(true); setMsg('');
+    try {
+      const res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'pago_servicio',
+          token: userToken,
+          dni: userDni,
+          servicio: confirmData.servicio,
+          suministro: confirmData.suministro,
+          monto: confirmData.monto
+        })
+      });
+      const data = await res.json();
+      setMsg(data.message); setOk(data.success);
+      if (data.success) {
+        onDone(data.nuevo_saldo);
+        setReceiptDetails({
+          id: `CCI-${Math.floor(100000000 + Math.random() * 900000000)}`,
+          date: new Date().toLocaleString('es-PE'),
+          type: 'Pago de Servicio',
+          description: `Pago de Servicio ${confirmData.servicio} - Suministro: ${confirmData.suministro}`,
+          amount: -confirmData.monto,
+          canal: 'Banca por Internet'
+        });
+      }
+    } catch {
+      setMsg('Error de conexión.');
+    } finally {
+      setLoading(false);
+      setConfirmData(null);
+    }
+  };
+
+  return (
+    <>
+      <Panel title="Pago de Servicios" subtitle="Luz, agua y telecomunicaciones" icon="⚡" color="#E53E3E" onClose={onClose}>
+        {ok ? (
+          <div className="text-center py-6 px-4">
+            <div className="w-14 h-14 rounded-full bg-[#E6F7F0] text-[#0F6E56] flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h4 className="text-[16px] font-bold text-[#072146] mb-2">Pago Realizado Exitosamente</h4>
+            <p className="text-[12.5px] text-gray-500 mb-6">{msg}</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => downloadReceipt(receiptDetails)}
+                className="h-11 bg-[#004481] hover:bg-[#1565C0] text-white text-[13px] font-bold px-5 rounded-[10px] transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Descargar Constancia
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="h-11 border border-[#E0E6ED] text-[#004481] hover:bg-gray-50 text-[13px] font-bold px-5 rounded-[10px] transition-colors cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={submit} className="space-y-4">
+            <Field label="Selecciona Empresa/Servicio">
+              <div className="grid grid-cols-3 gap-2">
+                {['Enel (Luz)', 'Sedapal (Agua)', 'Claro/Movistar'].map((serv) => (
+                  <button key={serv} type="button" onClick={() => setServicio(serv)}
+                    className={`py-2.5 rounded-[10px] text-[12px] font-semibold border-[1.5px] transition-all cursor-pointer ${
+                      servicio === serv ? 'bg-[#004481] border-[#004481] text-white' : 'bg-[#F8FAFC] border-[#E0E6ED] text-[#1A2B4A] hover:border-[#1973B8]'
+                    }`}>{serv}</button>
+                ))}
+              </div>
+            </Field>
+
+            <Field label="Código de Suministro / Cliente">
+              <input type="text" inputMode="numeric" placeholder="Ej. 12345678" value={suministro}
+                onChange={(e) => setSuministro(e.target.value.replace(/[^0-9]/g, ''))}
+                required className={inputClass} />
+            </Field>
+
+            <div className="bg-[#EEF3FB] border border-[#004481]/10 rounded-xl p-3.5 flex justify-between items-center">
+              <div>
+                <p className="text-[10px] text-[#004481] uppercase font-semibold">Total a Pagar (Deuda Pendiente)</p>
+                <p className="text-[17px] font-black text-[#004481] font-mono mt-0.5">S/ {getMontoServicio(servicio).toFixed(2)}</p>
+              </div>
+              <span className="bg-[#EEF3FB] border border-[#004481]/25 text-[#004481] text-[9.5px] font-extrabold px-2 py-0.5 rounded-full uppercase">Al Día</span>
+            </div>
+
+            {msg && <p className="text-red-600 text-[12px] font-medium text-center">{msg}</p>}
+            <BtnSubmit loading={loading} label="Consultar y Pagar" />
+          </form>
+        )}
+      </Panel>
+
+      <AnimatePresence>
+        {alertData && (
+          <div className="fixed inset-0 bg-[#072146]/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[20px] border border-[#EAECF0] shadow-2xl p-6 w-full max-w-[400px] text-center">
+              <svg className="w-14 h-14 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3 className="text-[18px] font-bold text-[#072146] mb-2">{alertData.title}</h3>
+              <p className="text-[13px] text-gray-500 mb-5 leading-relaxed">{alertData.message}</p>
+              <button type="button" onClick={() => setAlertData(null)}
+                className="w-full h-11 bg-[#004481] hover:bg-[#1565C0] text-white font-semibold rounded-[10px] transition-colors cursor-pointer">
+                Entendido
+              </button>
+            </motion.div>
+          </div>
+        )}
+
+        {confirmData && (
+          <div className="fixed inset-0 bg-[#072146]/65 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-[20px] border border-[#EAECF0] shadow-2xl overflow-hidden w-full max-w-[420px]">
+              <div className="bg-gradient-to-r from-[#E53E3E] to-[#FC8181] px-6 py-4 text-white">
+                <p className="text-[10px] uppercase tracking-[1.2px] font-semibold opacity-75">Confirmación de Operación</p>
+                <h3 className="text-[15px] font-bold">Pago de Servicio Público</h3>
+              </div>
+              <div className="p-6">
+                {tokenStep === 'details' ? (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-[#FFF3F3] text-[#E53E3E] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] text-center text-gray-500 mb-5">Por favor, confirma los detalles del pago de servicio:</p>
+                    <div className="bg-[#F8FAFC] border border-[#E0E6ED] rounded-[12px] p-4 mb-6 space-y-3">
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-gray-400 font-medium">Servicio</span>
+                        <span className="font-bold text-[#072146]">{confirmData.servicio}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-gray-400 font-medium">Suministro</span>
+                        <span className="font-bold text-[#072146] font-mono">{confirmData.suministro}</span>
+                      </div>
+                      <div className="border-t border-[#E0E6ED] pt-3 flex justify-between items-center">
+                        <span className="text-[12px] text-[#E53E3E] font-bold uppercase tracking-[0.5px]">Monto a Debitar</span>
+                        <span className="text-[18px] font-black text-[#E53E3E] font-mono">S/ {confirmData.monto.toFixed(2)}</span>
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => setConfirmData(null)}
+                        className="flex-1 h-11 border-[1.5px] border-[#E0E6ED] text-[#004481] hover:bg-[#F0F5FB] text-[13px] font-semibold rounded-[10px] transition-all cursor-pointer">
+                        Cancelar
+                      </button>
+                      <button type="button" onClick={handleProceedToToken}
+                        className="flex-1 h-11 bg-[#E53E3E] hover:bg-[#C53030] text-white text-[13px] font-semibold rounded-[10px] transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer">
+                        Confirmar
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-[#E6F7F0] text-[#0F6E56] flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    </div>
+                    <p className="text-[13px] text-center text-gray-500 mb-4">Se requiere autorización con tu **Token Digital** de seguridad:</p>
+                    
+                    <div className="bg-[#FEF3C7] border border-[#D97706]/20 rounded-xl p-3 mb-4 text-[11px] text-[#92400E]">
+                      <p className="font-bold flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        Token Digital autogenerado en tu celular:
+                      </p>
+                      <p className="text-[16px] font-black text-center mt-1 tracking-[0.2em] font-mono bg-white/60 py-1 rounded">
+                        {simulatedToken.substring(0, 3)} {simulatedToken.substring(3)}
+                      </p>
+                    </div>
+
+                    <div className="space-y-3 mb-5">
+                      <label className="block text-[10.5px] font-semibold text-[#004481] tracking-[0.5px] uppercase">Introduce el código del Token</label>
+                      <input 
+                        type="text" 
+                        placeholder="Escribe los 6 dígitos" 
+                        maxLength={6} 
+                        value={userTokenInput}
+                        onChange={(e) => setUserTokenInput(e.target.value.replace(/[^0-9]/g, ''))}
+                        className="w-full text-center text-[16px] font-bold tracking-[0.1em] font-mono h-11 border-[1.5px] border-[#E0E6ED] rounded-[10px] outline-none focus:border-[#004481]"
+                      />
+                      {tokenError && <p className="text-red-600 text-[11px] font-medium text-center">{tokenError}</p>}
+                    </div>
+
+                    <div className="flex gap-3">
+                      <button type="button" onClick={() => { setTokenStep('details'); setTokenError(''); }}
+                        className="flex-1 h-11 border-[1.5px] border-[#E0E6ED] text-[#004481] hover:bg-[#F0F5FB] text-[13px] font-semibold rounded-[10px] transition-all cursor-pointer">
+                        Atrás
+                      </button>
+                      <button type="button" onClick={executePagoServicio} disabled={loading}
+                        className="flex-1 h-11 bg-[#004481] hover:bg-[#1565C0] text-white text-[13px] font-semibold rounded-[10px] transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg cursor-pointer">
+                        {loading ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Confirmar y Pagar'}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           </div>
@@ -612,7 +987,14 @@ const PanelExtracto = ({ userDni, userToken, onClose }) => {
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
-                            alert(`Descargando constancia de operación de la transacción TX-${100000 + i}...`);
+                            downloadReceipt({
+                              id: `TX-${100000 + i}`,
+                              date: tx.date,
+                              type: tx.amount < 0 ? 'Pago/Egreso' : 'Ingreso/Abono',
+                              canal: tx.canal === 'app_movil' ? 'Banca Móvil App' : 'Banca por Internet',
+                              description: tx.name,
+                              amount: tx.amount
+                            });
                           }}
                           className="bg-[#004481] hover:bg-[#1565C0] text-white text-[9.5px] font-extrabold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0"
                         >
@@ -969,8 +1351,12 @@ const Dashboard = ({ user, onLogout }) => {
 
   const activeMovimientos = [...transaccionesAdicionales, ...movimientos];
 
+  const cardSuffix = cuenta.replace('019-', '');
+  const realCardNumber = `4821 75${cardSuffix.substring(0, 2)} ${cardSuffix.substring(2, 6)} ${cardSuffix.substring(6)}014`;
+
   const quickActions = [
     { icon: '↗', label: 'Transferir', color: '#EEF3FB', text: '#004481', key: 'transferir' },
+    { icon: '⚡', label: 'Servicios', color: '#FFF3F3', text: '#E53E3E', key: 'servicios' },
     { icon: '💳', label: 'Préstamo', color: '#FEF3C7', text: '#92400E', key: 'prestamo' },
     { icon: '📲', label: 'Recargar', color: '#E6F7F0', text: '#0F6E56', key: 'recargar' },
     { icon: '📄', label: 'Movimientos', color: '#F5F0FF', text: '#5B21B6', key: 'extracto' },
@@ -1114,11 +1500,11 @@ const Dashboard = ({ user, onLogout }) => {
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-7 rounded bg-gradient-to-br from-[#004481] to-[#072146] border border-white/10 p-1 flex flex-col justify-between shrink-0 shadow-sm relative overflow-hidden">
                     <span className="text-white/[0.15] text-[6.5px] font-black italic">EkuBank</span>
-                    <p className="text-white/40 text-[6px] font-mono tracking-widest text-right">•••• 4821</p>
+                    <p className="text-white/40 text-[6px] font-mono tracking-widest text-right">•••• {cardSuffix.substring(6)}014</p>
                   </div>
                   <div>
                     <p className="text-[13px] font-bold text-[#072146]">Tarjeta de Débito Visa</p>
-                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">4821 75** **** 9014</p>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">{realCardNumber}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -1190,7 +1576,7 @@ const Dashboard = ({ user, onLogout }) => {
 
         {/* ACCIONES RÁPIDAS */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="grid grid-cols-4 gap-3 mb-5">
+          className="grid grid-cols-5 gap-2 mb-5">
           {quickActions.map((a) => (
             <button key={a.key} onClick={() => togglePanel(a.key)}
               className={`flex flex-col items-center gap-2 rounded-[14px] py-4 px-2 border transition-all ${
@@ -1211,6 +1597,9 @@ const Dashboard = ({ user, onLogout }) => {
         <AnimatePresence mode="wait">
           {activePanel === 'transferir' && (
             <PanelTransferir key="transferir" userDni={user?.dni} userToken={user?.token} saldoDisponible={saldoNum} onDone={handleOperationDone} onClose={() => setActivePanel(null)} />
+          )}
+          {activePanel === 'servicios' && (
+            <PanelServicios key="servicios" userDni={user?.dni} userToken={user?.token} saldoDisponible={saldoNum} onDone={handleOperationDone} onClose={() => setActivePanel(null)} />
           )}
           {activePanel === 'recargar' && (
             <PanelRecargar key="recargar" userDni={user?.dni} userToken={user?.token} saldoDisponible={saldoNum} onDone={handleOperationDone} onClose={() => setActivePanel(null)} />
@@ -1507,7 +1896,14 @@ const Dashboard = ({ user, onLogout }) => {
                               <button 
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  alert(`Descargando constancia de operación de la transacción TX-{200000 + i}...`);
+                                  downloadReceipt({
+                                    id: `TX-${200000 + i}`,
+                                    date: tx.date,
+                                    type: tx.amount < 0 ? 'Pago/Egreso' : 'Ingreso/Abono',
+                                    canal: tx.canal === 'app_movil' ? 'Banca Móvil App' : 'Banca por Internet',
+                                    description: tx.name,
+                                    amount: tx.amount
+                                  });
                                 }}
                                 className="bg-[#004481] hover:bg-[#1565C0] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0 shadow-sm"
                               >

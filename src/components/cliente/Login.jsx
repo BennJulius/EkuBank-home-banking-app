@@ -11,6 +11,18 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [bloqueado, setBloqueado] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [step, setStep] = useState(1); // 1: DNI/Tarjeta/CE, 2: Contraseña
+  const [tecladoOrden, setTecladoOrden] = useState([]);
+
+  // Mezclar los dígitos 0-9 para el teclado virtual
+  const inicializarTeclado = () => {
+    const digitos = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    for (let i = digitos.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [digitos[i], digitos[j]] = [digitos[j], digitos[i]];
+    }
+    setTecladoOrden(digitos);
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('ekubank_login_block');
@@ -44,30 +56,42 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
     return () => clearInterval(timer);
   }, [bloqueado, countdown]);
 
-  // Nueva función para manejar el cambio de tipo de documento
   const handleDocTypeChange = (e) => {
     setDocType(e.target.value);
-    setDocNumber(''); // Limpiamos el input al cambiar de tipo
+    setDocNumber('');
     setError('');
   };
 
-  // Nueva función para validar lo que se escribe en tiempo real
   const handleDocNumberChange = (e) => {
     const value = e.target.value;
     
     if (docType === 'DNI') {
-      // Si es DNI: Solo acepta números y máximo 8 dígitos
       const onlyNums = value.replace(/[^0-9]/g, '');
-      if (onlyNums.length <= 8) {
-        setDocNumber(onlyNums);
-      }
+      if (onlyNums.length <= 8) setDocNumber(onlyNums);
     } else if (docType === 'CE') {
-      // Si es CE: Máximo 9 caracteres (letras y números)
       const alphanumeric = value.replace(/[^a-zA-Z0-9]/g, '');
-      if (alphanumeric.length <= 9) {
-        setDocNumber(alphanumeric.toUpperCase()); // Convertimos a mayúsculas por estética
+      if (alphanumeric.length <= 9) setDocNumber(alphanumeric.toUpperCase());
+    } else if (docType === 'TARJETA') {
+      const onlyNums = value.replace(/[^0-9]/g, '');
+      if (onlyNums.length <= 16) {
+        const parts = onlyNums.match(/.{1,4}/g) || [];
+        setDocNumber(parts.join(' '));
       }
     }
+  };
+
+  const handleVirtualKeyPress = (digito) => {
+    if (password.length < 6) {
+      setPassword(prev => prev + digito);
+    }
+  };
+
+  const handleVirtualClear = () => {
+    setPassword('');
+  };
+
+  const handleVirtualBackspace = () => {
+    setPassword(prev => prev.slice(0, -1));
   };
 
   const handleSubmit = async (e) => {
@@ -79,12 +103,27 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
       return;
     }
 
-    if (docType === 'DNI' && docNumber.length < 8) {
-      setError('El DNI debe tener 8 dígitos obligatoriamente.');
+    if (step === 1) {
+      const limpio = docNumber.replace(/\s/g, '');
+      if (docType === 'DNI' && limpio.length < 8) {
+        setError('El DNI debe tener 8 dígitos.');
+        return;
+      }
+      if (docType === 'CE' && limpio.length < 9) {
+        setError('El CE debe tener 9 caracteres.');
+        return;
+      }
+      if (docType === 'TARJETA' && limpio.length < 16) {
+        setError('El número de tarjeta debe tener 16 dígitos.');
+        return;
+      }
+      setStep(2);
+      inicializarTeclado();
       return;
     }
-    if (docType === 'CE' && docNumber.length < 9) {
-      setError('El Carné de Extranjería debe tener 9 caracteres.');
+
+    if (password.length < 6) {
+      setError('La clave de internet debe tener 6 dígitos.');
       return;
     }
 
@@ -96,7 +135,7 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dni: docNumber, password }),
+        body: JSON.stringify({ dni: docNumber.replace(/\s/g, ''), password }),
       });
 
       const data = await response.json();
@@ -119,7 +158,7 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
         setError(data.message || 'Datos incorrectos. Verifica tu documento y contraseña.');
       }
     } catch (err) {
-      setError('Error de conexión con el servidor EkuBank (Base de datos).');
+      setError('Error de conexión con el servidor EkuBank.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -128,7 +167,6 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
 
   return (
     <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[#F2F4F7] flex flex-col relative overflow-hidden">
-      {/* ── ALERTA ENTORNO ACADÉMICO / SIMULACIÓN ── */}
       <div className="bg-amber-500 text-white text-center py-2.5 px-4 text-[12px] font-bold shadow-sm relative z-50 flex items-center justify-center gap-2">
         <svg className="w-4.5 h-4.5 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
@@ -138,22 +176,19 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
         <span>ATENCIÓN: Este sitio es una SIMULACIÓN ACADÉMICA de banca por internet para un proyecto de la Universidad. No es un banco real.</span>
       </div>
 
-      {/* Decorative background circles */}
       <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-[#004481] opacity-[0.06] pointer-events-none" />
       <div className="absolute -bottom-20 -left-12 w-64 h-64 rounded-full bg-[#1973B8] opacity-[0.07] pointer-events-none" />
 
-      {/* Header */}
       <header className="w-full bg-[#004481] h-[60px] px-7 flex items-center justify-between relative z-10 shadow-md">
         <EkuBankLogo size={140} color="#ffffff" withDot />
         <button
           onClick={onNavigateToHome}
-          className="text-white/70 text-[13px] font-medium hover:text-white transition-colors flex items-center gap-1.5"
+          className="text-white/70 text-[13px] font-medium hover:text-white transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           Cerrar &nbsp;✕
         </button>
       </header>
 
-      {/* Main */}
       <main className="flex-1 flex items-center justify-center p-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -163,7 +198,6 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
         >
           <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_40px_rgba(0,68,129,0.10),0_1px_4px_rgba(0,68,129,0.06)]">
 
-            {/* Blue top banner */}
             <div className="relative overflow-hidden px-8 pt-7 pb-6"
               style={{ background: 'linear-gradient(135deg, #004481 0%, #1565C0 100%)' }}>
               <div className="absolute -top-8 -right-8 w-36 h-36 rounded-full bg-white/5" />
@@ -188,7 +222,6 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
               </motion.p>
             </div>
 
-            {/* Form */}
             <div className="px-8 pt-7 pb-8">
               <AnimatePresence>
                 {error && (
@@ -203,91 +236,148 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
               </AnimatePresence>
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* DNI field */}
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                  <label className="block text-[10.5px] font-semibold text-[#004481] tracking-[1px] uppercase mb-2">
-                    Documento de identidad
-                  </label>
-                  <div className="flex items-center border-[1.5px] border-[#E0E6ED] rounded-[10px] overflow-hidden bg-[#F8FAFC] focus-within:border-[#1973B8] focus-within:shadow-[0_0_0_3px_rgba(25,115,184,0.12)] focus-within:bg-white transition-all">
-                    <select
-                      value={docType}
-                      onChange={handleDocTypeChange}
-                      className="bg-transparent border-none border-r-[1.5px] border-[#E0E6ED] outline-none text-[13px] font-semibold text-[#004481] px-3 h-[46px] min-w-[64px] cursor-pointer appearance-none"
-                    >
-                      <option value="DNI">DNI</option>
-                      <option value="CE">CE</option>
-                    </select>
-                    <input
-                      type="text"
-                      className="flex-1 border-none outline-none text-[14px] text-[#1A2B4A] bg-transparent px-3.5 h-[46px] placeholder:text-[#B0BEC5]"
-                      placeholder={`Número de ${docType}`}
-                      value={docNumber}
-                      onChange={handleDocNumberChange}
-                      required
-                    />
-                  </div>
-                </motion.div>
+                {step === 1 ? (
+                  <div className="space-y-5">
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                      <label className="block text-[10.5px] font-semibold text-[#004481] tracking-[1px] uppercase mb-2">
+                        Tipo de acceso
+                      </label>
+                      <div className="flex items-center border-[1.5px] border-[#E0E6ED] rounded-[10px] overflow-hidden bg-[#F8FAFC] focus-within:border-[#1973B8] focus-within:shadow-[0_0_0_3px_rgba(25,115,184,0.12)] focus-within:bg-white transition-all">
+                        <select
+                          value={docType}
+                          onChange={handleDocTypeChange}
+                          className="bg-transparent border-none border-r-[1.5px] border-[#E0E6ED] outline-none text-[13px] font-semibold text-[#004481] px-3 h-[46px] min-w-[96px] cursor-pointer appearance-none"
+                        >
+                          <option value="DNI">DNI</option>
+                          <option value="TARJETA">Tarjeta</option>
+                          <option value="CE">CE</option>
+                        </select>
+                        <input
+                          type="text"
+                          className="flex-1 border-none outline-none text-[14px] text-[#1A2B4A] bg-transparent px-3.5 h-[46px] placeholder:text-[#B0BEC5]"
+                          placeholder={docType === 'TARJETA' ? "4821 7500 0000 0000" : `Número de ${docType}`}
+                          value={docNumber}
+                          onChange={handleDocNumberChange}
+                          required
+                        />
+                      </div>
+                    </motion.div>
 
-                {/* Password field */}
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                  <label className="block text-[10.5px] font-semibold text-[#004481] tracking-[1px] uppercase mb-2">
-                    Contraseña de banca
-                  </label>
-                  <div className="flex items-center border-[1.5px] border-[#E0E6ED] rounded-[10px] overflow-hidden bg-[#F8FAFC] focus-within:border-[#1973B8] focus-within:shadow-[0_0_0_3px_rgba(25,115,184,0.12)] focus-within:bg-white transition-all relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      inputMode="numeric"
-                      className="flex-1 border-none outline-none text-[18px] text-[#1A2B4A] bg-transparent pl-3.5 pr-16 h-[46px] tracking-[0.25em] font-mono text-center placeholder:font-sans placeholder:text-[14px] placeholder:tracking-normal placeholder:text-[#B0BEC5] placeholder:text-left"
-                      placeholder="6 dígitos"
-                      value={password}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/[^0-9]/g, '');
-                        if (v.length <= 6) setPassword(v);
-                      }}
-                      maxLength={6}
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 text-[11px] font-semibold text-[#1973B8] uppercase tracking-[0.5px] px-1.5 py-1 rounded hover:bg-[#1973B8]/10 transition-colors"
+                    <motion.button
+                      type="submit"
+                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                      className="w-full h-12 rounded-[10px] bg-[#004481] hover:bg-[#1565C0] text-white text-[14px] font-semibold tracking-[0.5px] flex items-center justify-center transition-colors mt-2 cursor-pointer"
                     >
-                      {showPassword ? 'Ocultar' : 'Ver'}
-                    </button>
+                      Siguiente
+                    </motion.button>
                   </div>
-                </motion.div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="bg-[#EEF3FB] rounded-xl p-3 flex items-center justify-between border border-[#004481]/10">
+                      <div>
+                        <p className="text-[10px] text-gray-400 uppercase font-semibold">Documento / Tarjeta</p>
+                        <p className="text-[13px] font-bold text-[#004481] font-mono">{docNumber}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setStep(1); setPassword(''); }}
+                        className="text-[11px] font-bold text-[#1973B8] hover:underline cursor-pointer"
+                      >
+                        Cambiar
+                      </button>
+                    </div>
 
-                {/* Submit */}
-                {bloqueado && countdown > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                    className="bg-amber-50 border-l-[3px] border-amber-500 rounded-r-lg p-3 text-[12.5px] font-medium text-amber-800 flex items-center gap-2"
-                  >
-                    <svg className="w-4.5 h-4.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span>Reintenta en <strong>{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</strong></span>
-                  </motion.div>
+                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                      <label className="block text-[10.5px] font-semibold text-[#004481] tracking-[1px] uppercase mb-2">
+                        Clave de Banca por Internet
+                      </label>
+                      <div className="flex items-center border-[1.5px] border-[#E0E6ED] rounded-[10px] overflow-hidden bg-[#F8FAFC] focus-within:border-[#1973B8] focus-within:shadow-[0_0_0_3px_rgba(25,115,184,0.12)] focus-within:bg-white transition-all relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          inputMode="numeric"
+                          className="flex-1 border-none outline-none text-[18px] text-[#1A2B4A] bg-transparent pl-3.5 pr-16 h-[46px] tracking-[0.25em] font-mono text-center placeholder:font-sans placeholder:text-[14px] placeholder:tracking-normal placeholder:text-[#B0BEC5] placeholder:text-left"
+                          placeholder="******"
+                          value={password}
+                          onChange={(e) => {
+                            const v = e.target.value.replace(/[^0-9]/g, '');
+                            if (v.length <= 6) setPassword(v);
+                          }}
+                          maxLength={6}
+                          required
+                          readOnly
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 text-[11px] font-semibold text-[#1973B8] uppercase tracking-[0.5px] px-1.5 py-1 rounded hover:bg-[#1973B8]/10 transition-colors cursor-pointer"
+                        >
+                          {showPassword ? 'Ocultar' : 'Ver'}
+                        </button>
+                      </div>
+                    </motion.div>
+
+                    <div className="bg-[#F8FAFC] border border-[#EAECF0] rounded-xl p-3">
+                      <p className="text-[9.5px] text-gray-400 uppercase font-semibold text-center mb-2">Usa el teclado virtual por seguridad</p>
+                      <div className="grid grid-cols-3 gap-2 max-w-[240px] mx-auto">
+                        {tecladoOrden.map((digito) => (
+                          <button
+                            key={digito}
+                            type="button"
+                            onClick={() => handleVirtualKeyPress(digito)}
+                            className="h-10 rounded-lg bg-white border border-[#E0E6ED] hover:border-[#1973B8] text-[#004481] text-[15px] font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center cursor-pointer"
+                          >
+                            {digito}
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={handleVirtualClear}
+                          className="h-10 rounded-lg bg-[#F2F4F7] text-gray-500 text-[11px] font-bold active:scale-95 transition-all flex items-center justify-center border border-[#E0E6ED] cursor-pointer"
+                        >
+                          Limpiar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleVirtualBackspace}
+                          className="h-10 rounded-lg bg-[#F2F4F7] text-gray-500 text-[11px] font-bold active:scale-95 transition-all flex items-center justify-center border border-[#E0E6ED] cursor-pointer"
+                        >
+                          Borrar
+                        </button>
+                      </div>
+                    </div>
+
+                    {bloqueado && countdown > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
+                        className="bg-amber-50 border-l-[3px] border-amber-500 rounded-r-lg p-3 text-[12.5px] font-medium text-amber-800 flex items-center gap-2"
+                      >
+                        <svg className="w-4.5 h-4.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span>Reintenta en <strong>{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</strong></span>
+                      </motion.div>
+                    )}
+
+                    <motion.button
+                      type="submit"
+                      disabled={isLoading || bloqueado}
+                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full h-12 rounded-[10px] bg-[#004481] hover:bg-[#1565C0] text-white text-[14px] font-semibold tracking-[0.5px] flex items-center justify-center gap-2 transition-colors disabled:opacity-65 disabled:cursor-not-allowed mt-2 overflow-hidden relative cursor-pointer"
+                    >
+                      {isLoading ? (
+                        <>
+                          <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Consultando...
+                        </>
+                      ) : bloqueado ? (
+                        'Acceso bloqueado temporalmente'
+                      ) : (
+                        'Entrar a mi cuenta'
+                      )}
+                    </motion.button>
+                  </div>
                 )}
-
-                <motion.button
-                  type="submit"
-                  disabled={isLoading || bloqueado}
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full h-12 rounded-[10px] bg-[#004481] hover:bg-[#1565C0] text-white text-[14px] font-semibold tracking-[0.5px] flex items-center justify-center gap-2 transition-colors disabled:opacity-65 disabled:cursor-not-allowed mt-2 overflow-hidden relative"
-                >
-                  {isLoading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Consultando...
-                    </>
-                  ) : bloqueado ? (
-                    'Acceso bloqueado temporalmente'
-                  ) : (
-                    'Entrar a mi cuenta'
-                  )}
-                </motion.button>
               </form>
 
               <motion.div
@@ -297,8 +387,7 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
                 <a href="#" className="text-[#1973B8] text-[12.5px] font-medium hover:text-[#004481] transition-colors">
                   ¿Olvidaste tu contraseña?
                 </a>
-                {/* NUEVO BOTÓN DE REGISTRO */}
-                <button onClick={onNavigateToRegister} className="text-gray-600 text-[12.5px] font-bold hover:text-[#1973B8] transition-colors">
+                <button onClick={onNavigateToRegister} className="text-gray-600 text-[12.5px] font-bold hover:text-[#1973B8] transition-colors cursor-pointer">
                   ¿No tienes cuenta? Regístrate aquí
                 </button>
               </motion.div>

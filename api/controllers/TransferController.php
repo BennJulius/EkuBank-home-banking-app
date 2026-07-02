@@ -297,6 +297,62 @@ elseif ($action === 'pagar_cuota') {
     } catch (Exception $e) {
         $db->rollBack();
         echo json_encode(["success" => false, "message" => "Error al procesar el pago de la cuota."]);
+}
+
+// ============================================
+// PAGO DE SERVICIOS
+// ============================================
+elseif ($action === 'pago_servicio') {
+    $dni = htmlspecialchars(strip_tags(trim($data->dni ?? '')));
+    $servicio = htmlspecialchars(strip_tags(trim($data->servicio ?? '')));
+    $suministro = htmlspecialchars(strip_tags(trim($data->suministro ?? '')));
+    $monto = floatval($data->monto ?? 0);
+
+    // IDOR: verificar propiedad
+    $stmtOwner = $db->prepare("SELECT user_id FROM perfiles_clientes WHERE dni = ? AND user_id = ?");
+    $stmtOwner->execute([$dni, $sesion['user_id']]);
+    if (!$stmtOwner->fetch()) {
+        http_response_code(403);
+        echo json_encode(["success" => false, "message" => "No autorizado para operar esta cuenta."]);
+        exit;
+    }
+
+    if (empty($dni) || empty($servicio) || empty($suministro) || $monto <= 0) {
+        echo json_encode(["success" => false, "message" => "Datos de servicio incompletos."]);
+        exit;
+    }
+
+    try {
+        $db->beginTransaction();
+
+        $st = $db->prepare("SELECT c.id, c.user_id, c.saldo FROM cuentas c JOIN perfiles_clientes p ON c.user_id = p.user_id WHERE p.dni = ? LIMIT 1");
+        $st->execute([$dni]);
+        $cuenta = $st->fetch(PDO::FETCH_ASSOC);
+
+        if (!$cuenta) { $db->rollBack(); echo json_encode(["success" => false, "message" => "Cuenta no encontrada."]); exit; }
+        if ($cuenta['saldo'] < $monto) { $db->rollBack(); echo json_encode(["success" => false, "message" => "Saldo insuficiente."]); exit; }
+
+        // Debitar el monto de la cuenta de ahorros
+        $db->prepare("UPDATE cuentas SET saldo = saldo - ? WHERE id = ?")->execute([$monto, $cuenta['id']]);
+
+        // Registrar la transacción de pago
+        $db->prepare("INSERT INTO transacciones (user_id, descripcion, tipo, monto, canal) VALUES (?, ?, 'debito', ?, 'homebanking')")
+           ->execute([$cuenta['user_id'], "Pago de Servicio: " . $servicio . " (Suministro: " . $suministro . ")", $monto]);
+
+        $db->commit();
+
+        $nuevoSaldo = $db->prepare("SELECT saldo FROM cuentas WHERE id = ?");
+        $nuevoSaldo->execute([$cuenta['id']]);
+
+        echo json_encode([
+            "success" => true,
+            "message" => "Pago de servicio " . $servicio . " realizado con éxito.",
+            "nuevo_saldo" => $nuevoSaldo->fetchColumn()
+        ]);
+
+    } catch (Exception $e) {
+        $db->rollBack();
+        echo json_encode(["success" => false, "message" => "Error al procesar el pago del servicio."]);
     }
 }
 

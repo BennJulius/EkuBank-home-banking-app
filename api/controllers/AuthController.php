@@ -59,6 +59,7 @@ if (isset($data->action) && $data->action === 'validar_sesion' && !empty($data->
 // --- Login ---
 if (!empty($data->dni) && !empty($data->password)) {
     $identifier = htmlspecialchars(strip_tags(trim($data->dni)));
+    $identifier = str_replace([' ', '-'], '', $identifier);
     $user->dni = $identifier;
     $user->password = $data->password;
     $rolSolicitado = $data->rol ?? 'cliente';
