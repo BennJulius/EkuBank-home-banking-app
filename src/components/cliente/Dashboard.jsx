@@ -453,6 +453,12 @@ const PanelExtracto = ({ userDni, userToken, onClose }) => {
   const [resumen, setResumen] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState('todos');
+  const [expandedTxIndex, setExpandedTxIndex] = useState(null);
+
+  const handleFilterClick = (key) => {
+    setActiveFilter(key);
+    setExpandedTxIndex(null);
+  };
 
   useEffect(() => {
     (async () => {
@@ -506,7 +512,7 @@ const PanelExtracto = ({ userDni, userToken, onClose }) => {
           return (
             <button
               key={filter.key}
-              onClick={() => setActiveFilter(filter.key)}
+              onClick={() => handleFilterClick(filter.key)}
               className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all flex-1 justify-center ${
                 activeFilter === filter.key
                   ? 'bg-white text-[#5B21B6] shadow-sm'
@@ -541,18 +547,84 @@ const PanelExtracto = ({ userDni, userToken, onClose }) => {
 
             const isPos = parseFloat(tx.amount) > 0;
             return (
-              <div key={i} className="flex items-center gap-3 py-2.5">
-                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
-                  style={{ background: cat.bg, color: cat.color }}>
-                  {renderCategoryIcon(classification, tx.category, "w-4 h-4")}
+              <div key={i} className="py-2.5">
+                {/* Header item (Clickable) */}
+                <div 
+                  onClick={() => setExpandedTxIndex(expandedTxIndex === i ? null : i)}
+                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-50/50 p-1.5 rounded-lg transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                    style={{ background: cat.bg, color: cat.color }}>
+                    {renderCategoryIcon(classification, tx.category, "w-4 h-4")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
+                    <p className="text-[10px] text-gray-400">{tx.date}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] font-bold font-mono shrink-0" style={{ color: isPos ? '#0F6E56' : '#DC2626' }}>
+                      {isPos ? '+' : ''}S/ {Math.abs(tx.amount).toFixed(2)}
+                    </span>
+                    <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedTxIndex === i ? 'rotate-180' : ''}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
-                  <p className="text-[10px] text-gray-400">{tx.date} · {tx.canal}</p>
-                </div>
-                <span className="text-[12px] font-bold font-mono shrink-0" style={{ color: isPos ? '#0F6E56' : '#DC2626' }}>
-                  {isPos ? '+' : ''}S/ {Math.abs(tx.amount).toFixed(2)}
-                </span>
+
+                {/* Accordion Detail Panel */}
+                <AnimatePresence>
+                  {expandedTxIndex === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden mt-2 bg-[#F8FAFC] border border-[#EAECF0] rounded-xl p-3 text-[10.5px] text-[#1A2B4A] space-y-2"
+                    >
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <div>
+                          <span className="text-gray-400 block text-[9.5px] uppercase font-semibold">Canal de operación:</span>
+                          <span className="font-semibold capitalize text-[11px]">{tx.canal || 'Banca por Internet'}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block text-[9.5px] uppercase font-semibold">Estado:</span>
+                          <span className="text-[#0F6E56] font-bold flex items-center gap-0.5 text-[11px]">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Procesado
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block text-[9.5px] uppercase font-semibold">Código único (CCI):</span>
+                          <span className="font-mono font-semibold text-[11px]">TX-{100000 + i}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-400 block text-[9.5px] uppercase font-semibold">Tipo de operación:</span>
+                          <span className="font-semibold text-[11px]">{isPos ? 'Ingreso (Abono)' : 'Egreso (Cargo)'}</span>
+                        </div>
+                      </div>
+                      <div className="border-t border-[#EAECF0] pt-2 flex items-center justify-between gap-3">
+                        <div className="max-w-[70%]">
+                          <span className="text-gray-400 block text-[9.5px] uppercase font-semibold">Descripción del movimiento:</span>
+                          <p className="text-[11px] font-medium text-gray-700 leading-normal">{tx.name}</p>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            alert(`Descargando constancia de operación de la transacción TX-${100000 + i}...`);
+                          }}
+                          className="bg-[#004481] hover:bg-[#1565C0] text-white text-[9.5px] font-extrabold px-2.5 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          Recibo
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
@@ -629,6 +701,7 @@ const Dashboard = ({ user, onLogout }) => {
   const [expandedCronograma, setExpandedCronograma] = useState(null);
   const [loanConfirmData, setLoanConfirmData] = useState(null);
   const [alertData, setAlertData] = useState(null);
+  const [expandedMovIndex, setExpandedMovIndex] = useState(null);
 
   const getLoanStatus = (pr) => {
     const paymentDay = Number(pr.dia_pago || 15);
@@ -981,102 +1054,138 @@ const Dashboard = ({ user, onLogout }) => {
           </motion.div>
         )}
 
-        {/* FILA DE TARJETAS (SALDO Y SCORE) */}
+        {/* SECCIÓN DE PRODUCTOS (ESTILO BBVA: CUENTAS/TARJETAS Y SALUD FINANCIERA) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-          {/* TARJETA DE SALDO */}
-          <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-br from-[#004481] to-[#1565C0] rounded-[20px] p-6 relative overflow-hidden flex flex-col justify-between h-[210px] w-full">
-            <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/5 pointer-events-none" />
-            <div className="absolute bottom-[-60px] left-16 w-40 h-40 rounded-full bg-white/[0.04] pointer-events-none" />
-            <div className="relative z-10 flex flex-col justify-between h-full w-full">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-[10px] text-white/60 uppercase tracking-[1px] mb-0.5">Cuenta Independencia</p>
-                  <p className="text-[12px] text-white/75 font-mono">{cuenta}</p>
+          {/* COLUMNA IZQUIERDA: CUENTAS Y TARJETAS */}
+          <div className="space-y-5">
+            {/* CUENTAS */}
+            <div>
+              <div className="flex justify-between items-center mb-2.5">
+                <h2 className="text-[11.5px] font-extrabold text-[#004481] uppercase tracking-[1.2px]">Cuentas</h2>
+                <button onClick={() => setShowSaldo(!showSaldo)}
+                  className="text-[#004481] hover:text-[#1565C0] text-[10.5px] font-bold flex items-center gap-1 transition-colors">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    {showSaldo ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    )}
+                  </svg>
+                  <span>{showSaldo ? 'Ocultar saldos' : 'Ver saldos'}</span>
+                </button>
+              </div>
+              
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-2xl border border-[#EAECF0] p-4.5 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#EEF3FB] text-[#004481] flex items-center justify-center shrink-0">
+                    <svg className="w-5.5 h-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-[#072146]">Cuenta Independencia</p>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">{cuenta}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="bg-[#49D0A0]/20 text-[#49D0A0] text-[10px] font-bold px-2 py-0.5 rounded-full">Activa</span>
-                  <button onClick={() => setShowSaldo(!showSaldo)}
-                    className="text-white/50 hover:text-white/90 transition-colors text-[10.5px] font-semibold bg-white/10 px-2 py-0.5 rounded">
-                    {showSaldo ? 'Ocultar' : 'Ver'}
-                  </button>
+                <div className="text-right">
+                  <p className="text-[9.5px] text-gray-400 uppercase font-semibold">Saldo disponible</p>
+                  <AnimatePresence mode="wait">
+                    {showSaldo ? (
+                      <motion.p key="show" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="text-[17px] font-black text-[#072146] font-mono leading-tight mt-0.5">
+                        <span className="text-[12px] font-bold mr-0.5">S/</span>
+                        {isLoadingData ? '—' : saldoNum.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                      </motion.p>
+                    ) : (
+                      <motion.p key="hide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="text-[15px] font-black text-[#072146] tracking-[0.1em] leading-tight mt-0.5">••••••</motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] text-white/50 uppercase tracking-[0.8px] mb-0.5">Saldo disponible</p>
-                <AnimatePresence mode="wait">
-                  {showSaldo ? (
-                    <motion.p key="show" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="text-[32px] font-bold text-white tracking-tight font-mono leading-none">
-                      <span className="text-[18px] font-normal opacity-70 mr-1">S/</span>
-                      {isLoadingData ? '—' : saldoNum.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
-                    </motion.p>
-                  ) : (
-                    <motion.p key="hide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="text-[32px] font-bold text-white tracking-[0.2em] leading-none">•••••••</motion.p>
-                  )}
-                </AnimatePresence>
-              </div>
-              <div className="flex justify-between items-end">
-                {deudaTotal > 0 ? (
-                  <p className="text-[10px] text-[#F0AD4E]">Deuda activa: S/ {deudaTotal.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
-                ) : (
-                  <p className="text-[10px] text-white/30">Sin deudas activas</p>
-                )}
-                <p className="text-[10px] text-white/40">DNI: {user?.dni}</p>
-              </div>
+              </motion.div>
             </div>
-          </motion.div>
 
-          {/* TARJETA DE SCORE CREDITICIO */}
-          <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.05 }}
-            className="bg-white border border-[#EAECF0] rounded-[20px] p-6 relative overflow-hidden flex flex-col justify-between h-[210px] w-full shadow-sm">
-            <div className="relative z-10 flex flex-col justify-between h-full w-full">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-[10px] text-gray-400 uppercase tracking-[1px] font-semibold">Salud Financiera</p>
-                  <p className="text-[12px] text-gray-500 font-bold">Score Crediticio EkuBank</p>
+            {/* TARJETAS */}
+            <div>
+              <h2 className="text-[11.5px] font-extrabold text-[#004481] uppercase tracking-[1.2px] mb-2.5">Tarjetas</h2>
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                className="bg-white rounded-2xl border border-[#EAECF0] p-4.5 shadow-sm hover:shadow-md transition-all flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-7 rounded bg-gradient-to-br from-[#004481] to-[#072146] border border-white/10 p-1 flex flex-col justify-between shrink-0 shadow-sm relative overflow-hidden">
+                    <span className="text-white/[0.15] text-[6.5px] font-black italic">EkuBank</span>
+                    <p className="text-white/40 text-[6px] font-mono tracking-widest text-right">•••• 4821</p>
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-bold text-[#072146]">Tarjeta de Débito Visa</p>
+                    <p className="text-[11px] text-gray-400 font-mono mt-0.5">4821 75** **** 9014</p>
+                  </div>
                 </div>
-                <div>
-                  {score >= 750 && <span className="bg-[#E6F7F0] text-[#0F6E56] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Excelente</span>}
-                  {score >= 600 && score < 750 && <span className="bg-[#EEF3FB] text-[#004481] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Normal</span>}
-                  {score >= 450 && score < 600 && <span className="bg-[#FEF3C7] text-[#92400E] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Riesgo (CPP)</span>}
-                  {score < 450 && <span className="bg-red-50 text-[#DC2626] text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase">Crítico</span>}
+                <div className="text-right">
+                  <p className="text-[9.5px] text-gray-400 uppercase font-semibold">Línea de compras</p>
+                  <AnimatePresence mode="wait">
+                    {showSaldo ? (
+                      <motion.p key="show" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="text-[14.5px] font-bold text-gray-600 font-mono leading-tight mt-0.5">
+                        <span className="text-[11.5px] font-medium mr-0.5">S/</span>
+                        {isLoadingData ? '—' : saldoNum.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+                      </motion.p>
+                    ) : (
+                      <motion.p key="hide" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="text-[13px] font-bold text-gray-400 tracking-[0.1em] mt-0.5">••••••</motion.p>
+                    )}
+                  </AnimatePresence>
                 </div>
-              </div>
-
-              <div className="my-1">
-                <p className="text-[10px] text-gray-400 uppercase tracking-[0.8px] mb-0.5">Puntaje de crédito</p>
-                <div className="flex items-baseline leading-none">
-                  <span className="text-[34px] font-black text-[#072146] font-mono leading-none">{score}</span>
-                  <span className="text-[14px] text-gray-400 ml-1 font-semibold">/ 850 pts</span>
-                </div>
-              </div>
-
-              <div>
-                <div className="h-2 bg-[#F0F2F5] rounded-full overflow-hidden w-full relative">
-                  <div 
-                    className="h-full rounded-full transition-all duration-500" 
-                    style={{ 
-                      width: `${((score - 300) / 550 * 100).toFixed(0)}%`,
-                      backgroundColor: score >= 750 ? '#0D9E75' : score >= 600 ? '#1973B8' : score >= 450 ? '#D97706' : '#DC2626'
-                    }} 
-                  />
-                </div>
-                <div className="flex justify-between text-[8px] text-gray-300 font-bold uppercase mt-1">
-                  <span>Mín: 300</span>
-                  <span>Máx: 850</span>
-                </div>
-              </div>
-
-              <p className="text-[10.5px] text-gray-500 leading-snug">
-                {score >= 750 && "¡Excelente! Mantienes tus cuotas al día. Tienes acceso preferencial a mejores tasas."}
-                {score >= 600 && score < 750 && "Buen comportamiento crediticio. Tu calificación en el sistema es Normal."}
-                {score >= 450 && score < 600 && "¡Alerta! Registras atrasos de pago. Cancela tus cuotas para evitar reportes SBS."}
-                {score < 450 && "Tu score se encuentra afectado por morosidad crítica. Regulariza tus pagos pronto."}
-              </p>
+              </motion.div>
             </div>
-          </motion.div>
+          </div>
+
+          {/* COLUMNA DERECHA: SALUD FINANCIERA */}
+          <div>
+            <h2 className="text-[11.5px] font-extrabold text-[#004481] uppercase tracking-[1.2px] mb-2.5">Salud Financiera</h2>
+            <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.08 }}
+              className="bg-white border border-[#EAECF0] rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between h-[184px] w-full shadow-sm hover:shadow-md transition-all">
+              <div className="relative z-10 flex flex-col justify-between h-full w-full">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-[11.5px] text-gray-500 font-bold">Score Crediticio EkuBank</p>
+                  </div>
+                  <div>
+                    {score >= 750 && <span className="bg-[#E6F7F0] text-[#0F6E56] text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">Excelente</span>}
+                    {score >= 600 && score < 750 && <span className="bg-[#EEF3FB] text-[#004481] text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">Normal</span>}
+                    {score >= 450 && score < 600 && <span className="bg-[#FEF3C7] text-[#92400E] text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">Riesgo (CPP)</span>}
+                    {score < 450 && <span className="bg-red-50 text-[#DC2626] text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase">Crítico</span>}
+                  </div>
+                </div>
+
+                <div className="my-0.5">
+                  <div className="flex items-baseline leading-none">
+                    <span className="text-[28px] font-black text-[#072146] font-mono leading-none">{score}</span>
+                    <span className="text-[12px] text-gray-400 ml-1 font-semibold">/ 850 pts</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="h-1.5 bg-[#F0F2F5] rounded-full overflow-hidden w-full relative">
+                    <div 
+                      className="h-full rounded-full transition-all duration-500" 
+                      style={{ 
+                        width: `${((score - 300) / 550 * 100).toFixed(0)}%`,
+                        backgroundColor: score >= 750 ? '#0D9E75' : score >= 600 ? '#1973B8' : score >= 450 ? '#D97706' : '#DC2626'
+                      }} 
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[9.5px] text-gray-400 leading-snug">
+                  {score >= 750 && "¡Excelente! Mantienes tus cuotas al día. Tienes acceso preferencial a mejores tasas."}
+                  {score >= 600 && score < 750 && "Buen comportamiento crediticio. Tu calificación en el sistema es Normal."}
+                  {score >= 450 && score < 600 && "¡Alerta! Registras atrasos de pago. Cancela tus cuotas para evitar reportes SBS."}
+                  {score < 450 && "Tu score se encuentra afectado por morosidad crítica. Regulariza tus pagos pronto."}
+                </p>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
         {/* ACCIONES RÁPIDAS */}
@@ -1333,18 +1442,84 @@ const Dashboard = ({ user, onLogout }) => {
                   const classification = getTxClassification(tx);
                   const isPos = parseFloat(tx.amount) > 0;
                   return (
-                    <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
-                      <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
-                        style={{ background: cat.bg, color: cat.color }}>
-                        {renderCategoryIcon(classification, tx.category, "w-4.5 h-4.5")}
+                    <div key={i} className="border-b border-[#F5F7FA] last:border-0 px-5 py-3">
+                      {/* Header item (Clickable) */}
+                      <div 
+                        onClick={() => setExpandedMovIndex(expandedMovIndex === i ? null : i)}
+                        className="flex items-center gap-3 cursor-pointer hover:bg-[#FAFBFC] -mx-3 px-3 py-1 rounded-xl transition-colors"
+                      >
+                        <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+                          style={{ background: cat.bg, color: cat.color }}>
+                          {renderCategoryIcon(classification, tx.category, "w-4.5 h-4.5")}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
+                          <p className="text-[11.5px] text-gray-400 capitalize">{tx.date}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-bold font-mono shrink-0" style={{ color: isPos ? '#0F6E56' : '#DC2626' }}>
+                            {isPos ? '+' : ''}S/ {Math.abs(tx.amount).toFixed(2)}
+                          </span>
+                          <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${expandedMovIndex === i ? 'rotate-180' : ''}`}
+                            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
-                        <p className="text-[11px] text-gray-400 capitalize">{tx.date}</p>
-                      </div>
-                      <span className="text-[13px] font-bold font-mono shrink-0" style={{ color: isPos ? '#0F6E56' : '#DC2626' }}>
-                        {isPos ? '+' : ''}S/ {Math.abs(tx.amount).toFixed(2)}
-                      </span>
+
+                      {/* Accordion Detail Panel */}
+                      <AnimatePresence>
+                        {expandedMovIndex === i && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden mt-2 bg-[#F8FAFC] border border-[#EAECF0] rounded-xl p-3 text-[11px] text-[#1A2B4A] space-y-2.5"
+                          >
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                              <div>
+                                <span className="text-gray-400 block text-[10px] uppercase font-semibold">Canal:</span>
+                                <span className="font-semibold capitalize">{tx.canal || 'Banca por Internet'}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400 block text-[10px] uppercase font-semibold">Estado:</span>
+                                <span className="text-[#0F6E56] font-bold flex items-center gap-0.5">
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                  </svg>
+                                  Procesado
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400 block text-[10px] uppercase font-semibold">Código único:</span>
+                                <span className="font-mono font-semibold">TX-{200000 + i}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400 block text-[10px] uppercase font-semibold">Tipo:</span>
+                                <span className="font-semibold">{isPos ? 'Ingreso (Abono)' : 'Egreso (Cargo)'}</span>
+                              </div>
+                            </div>
+                            <div className="border-t border-gray-200/60 pt-2.5 flex items-center justify-between gap-3">
+                              <div className="max-w-[70%]">
+                                <span className="text-gray-400 block text-[10px] uppercase font-semibold">Descripción completa:</span>
+                                <p className="text-[11px] font-medium text-gray-700 leading-relaxed">{tx.name}</p>
+                              </div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  alert(`Descargando constancia de operación de la transacción TX-{200000 + i}...`);
+                                }}
+                                className="bg-[#004481] hover:bg-[#1565C0] text-white text-[10px] font-extrabold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shrink-0 shadow-sm"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Recibo
+                              </button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   );
                 })
