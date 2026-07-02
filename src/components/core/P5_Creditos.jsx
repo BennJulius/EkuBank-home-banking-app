@@ -142,7 +142,19 @@ const P5Creditos = ({ apiData, empleado, onRefreshData }) => {
           toast.type === 'rechazado' ? 'bg-red-50 text-[#DC2626] border-red-200' :
           'bg-[#FEF3C7] text-[#92400E] border-[#92400E]/20'
         }`}>
-          <span className="text-[18px]">{toast.type === 'aprobado' ? '✅' : toast.type === 'rechazado' ? '❌' : '⚠️'}</span>
+          {toast.type === 'aprobado' ? (
+            <svg className="w-5 h-5 text-[#0F6E56] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : toast.type === 'rechazado' ? (
+            <svg className="w-5 h-5 text-[#DC2626] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-[#92400E] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          )}
           {toast.message}
         </div>
       )}
@@ -303,8 +315,13 @@ const P5Creditos = ({ apiData, empleado, onRefreshData }) => {
                       )}
                     </div>
                   ) : (
-                    <div className="bg-[#FEF3C7]/30 border border-[#92400E]/20 rounded-xl p-3.5 text-[11.5px] text-[#92400E]">
-                      ⚠️ <strong>Atención:</strong> Esta solicitud aún no tiene propuesta registrada por un evaluador. El flujo requiere que un evaluador analice la capacidad de pago antes de la resolución del comité.
+                    <div className="bg-[#FEF3C7]/30 border border-[#92400E]/20 rounded-xl p-3.5 text-[11.5px] text-[#92400E] flex items-start gap-2">
+                      <svg className="w-4 h-4 text-[#92400E] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <div>
+                        <strong>Atención:</strong> Esta solicitud aún no tiene propuesta registrada por un evaluador. El flujo requiere que un evaluador analice la capacidad de pago antes de la resolución del comité.
+                      </div>
                     </div>
                   )}
 

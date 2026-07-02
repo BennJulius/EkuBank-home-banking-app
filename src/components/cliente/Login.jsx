@@ -130,7 +130,11 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
     <div style={{ fontFamily: "'DM Sans', sans-serif" }} className="min-h-screen bg-[#F2F4F7] flex flex-col relative overflow-hidden">
       {/* ── ALERTA ENTORNO ACADÉMICO / SIMULACIÓN ── */}
       <div className="bg-amber-500 text-white text-center py-2.5 px-4 text-[12px] font-bold shadow-sm relative z-50 flex items-center justify-center gap-2">
-        <span>🎓</span>
+        <svg className="w-4.5 h-4.5 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.52 13.064c-.377.162-.77.304-1.177.424A9.12 9.12 0 001 18.062c0 .937.121 1.848.349 2.718A12.011 12.011 0 0012 23c2.907 0 5.598-.87 7.854-2.36a11.97 11.97 0 00.347-2.718A9.12 9.12 0 0018.5 13.5c-.407-.12-.8-.262-1.177-.424" />
+        </svg>
         <span>ATENCIÓN: Este sitio es una SIMULACIÓN ACADÉMICA de banca por internet para un proyecto de la Universidad. No es un banco real.</span>
       </div>
 
@@ -259,7 +263,9 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
                     initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
                     className="bg-amber-50 border-l-[3px] border-amber-500 rounded-r-lg p-3 text-[12.5px] font-medium text-amber-800 flex items-center gap-2"
                   >
-                    <span className="text-[16px]">🔒</span>
+                    <svg className="w-4.5 h-4.5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                     <span>Reintenta en <strong>{Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}</strong></span>
                   </motion.div>
                 )}
@@ -277,7 +283,7 @@ const Login = ({ onNavigateToHome, onNavigateToRegister, onLoginSuccess }) => {
                       Consultando...
                     </>
                   ) : bloqueado ? (
-                    '🔒 Cuenta bloqueada temporalmente'
+                    'Acceso bloqueado temporalmente'
                   ) : (
                     'Entrar a mi cuenta'
                   )}

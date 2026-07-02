@@ -15,7 +15,11 @@ const Home = ({ onNavigateToLogin, onNavigateToEmpleado, onNavigateToTarjetaInfo
     <div className="min-h-screen bg-white text-[#072146]">
       {/* ── ALERTA ENTORNO ACADÉMICO / SIMULACIÓN ── */}
       <div className="bg-amber-500 text-white text-center py-2.5 px-4 text-[12.5px] font-bold shadow-sm relative z-50 flex items-center justify-center gap-2">
-        <span>🎓</span>
+        <svg className="w-4.5 h-4.5 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.52 13.064c-.377.162-.77.304-1.177.424A9.12 9.12 0 001 18.062c0 .937.121 1.848.349 2.718A12.011 12.011 0 0012 23c2.907 0 5.598-.87 7.854-2.36a11.97 11.97 0 00.347-2.718A9.12 9.12 0 0018.5 13.5c-.407-.12-.8-.262-1.177-.424" />
+        </svg>
         <span>ATENCIÓN: Este sitio es una SIMULACIÓN ACADÉMICA de banca por internet para un proyecto de la Universidad. No es un banco real.</span>
       </div>
 
@@ -184,12 +188,24 @@ const HeroEmpresas = ({ onNavigateToLogin }) => (
         <div className="relative">
           <div className="w-[320px] bg-white/10 backdrop-blur-md rounded-[20px] border border-white/20 p-6 space-y-4">
             {[
-              { icon: '📊', title: 'Línea de Crédito', value: 'Hasta S/ 500,000', color: '#F0AD4E' },
-              { icon: '📋', title: 'Factoring', value: 'Desde 0.8% mensual', color: '#49D0A0' },
-              { icon: '🏗️', title: 'Leasing', value: 'Plazo hasta 60 meses', color: '#1973B8' },
+              { icon: (
+                <svg className="w-5.5 h-5.5 text-[#F0AD4E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              ), title: 'Línea de Crédito', value: 'Hasta S/ 500,000', color: '#F0AD4E' },
+              { icon: (
+                <svg className="w-5.5 h-5.5 text-[#49D0A0]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              ), title: 'Factoring', value: 'Desde 0.8% mensual', color: '#49D0A0' },
+              { icon: (
+                <svg className="w-5.5 h-5.5 text-[#1973B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
+                </svg>
+              ), title: 'Leasing', value: 'Plazo hasta 60 meses', color: '#1973B8' },
             ].map((item) => (
               <div key={item.title} className="bg-white/10 rounded-[12px] p-4 flex items-center gap-3 hover:bg-white/15 transition-colors">
-                <span className="text-[22px]">{item.icon}</span>
+                <div className="shrink-0">{item.icon}</div>
                 <div className="flex-1">
                   <p className="text-white text-[13px] font-semibold">{item.title}</p>
                   <p className="text-white/50 text-[11px]">{item.value}</p>

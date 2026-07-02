@@ -6,10 +6,130 @@ import EkuBankLogo from '../EkuBankLogo';
 const API = 'https://ekubank.ekubyte.net.pe/api/controllers/TransferController.php';
 
 const categoryStyle = {
-  shop:  { bg: '#EEF3FB', color: '#004481', icon: '🛒' },
-  bank:  { bg: '#E6F7F0', color: '#0F6E56', icon: '🏦' },
-  phone: { bg: '#FEF3C7', color: '#92400E', icon: '📱' },
-  play:  { bg: '#F5F0FF', color: '#5B21B6', icon: '▶' },
+  shop:  { bg: '#EEF3FB', color: '#004481' },
+  bank:  { bg: '#E6F7F0', color: '#0F6E56' },
+  phone: { bg: '#FEF3C7', color: '#92400E' },
+  play:  { bg: '#F5F0FF', color: '#5B21B6' },
+};
+
+const renderCategoryIcon = (classification, categoryKey, className = "w-4 h-4") => {
+  if (classification === 'prestamos') {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    );
+  }
+  if (classification === 'recargas') {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+    );
+  }
+  if (classification === 'transferencias') {
+    return (
+      <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+      </svg>
+    );
+  }
+  switch (categoryKey) {
+    case 'bank':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+      );
+    case 'phone':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    case 'play':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'shop':
+    default:
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      );
+  }
+};
+
+const renderFilterIcon = (key, className = "w-4 h-4") => {
+  switch (key) {
+    case 'todos':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      );
+    case 'transferencias':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      );
+    case 'prestamos':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'recargas':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    case 'otros':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
+
+const renderActionIcon = (key, className = "w-5 h-5") => {
+  switch (key) {
+    case 'transferir':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+        </svg>
+      );
+    case 'prestamo':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      );
+    case 'recargar':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+      );
+    case 'extracto':
+      return (
+        <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
 };
 
 const inputClass = "w-full border-[1.5px] border-[#E0E6ED] rounded-[10px] bg-[#F8FAFC] focus:border-[#1973B8] focus:shadow-[0_0_0_3px_rgba(25,115,184,0.12)] focus:bg-white outline-none text-[14px] text-[#1A2B4A] px-3.5 h-[46px] placeholder:text-[#B0BEC5] transition-all";
@@ -313,10 +433,19 @@ const PanelRecargar = ({ userDni, userToken, saldoDisponible, onDone, onClose })
 };
 
 // ─── PANEL: Extracto ───
+const getTxClassification = (tx) => {
+  const name = (tx.name || '').toLowerCase();
+  if (name.includes('transferencia')) return 'transferencias';
+  if (name.includes('préstamo') || name.includes('prestamo') || name.includes('pre-')) return 'prestamos';
+  if (name.includes('recarga')) return 'recargas';
+  return 'otros';
+};
+
 const PanelExtracto = ({ userDni, userToken, onClose }) => {
   const [txs, setTxs] = useState([]);
   const [resumen, setResumen] = useState({});
   const [loading, setLoading] = useState(true);
+  const [activeFilter, setActiveFilter] = useState('todos');
 
   useEffect(() => {
     (async () => {
@@ -332,36 +461,84 @@ const PanelExtracto = ({ userDni, userToken, onClose }) => {
   const totalIng = Number(resumen.total_ingresos || 0);
   const totalEgr = Number(resumen.total_egresos || 0);
 
+  const filteredTxs = txs.filter(tx => {
+    if (activeFilter === 'todos') return true;
+    return getTxClassification(tx) === activeFilter;
+  });
+
   return (
-    <Panel title="Extracto de cuenta" subtitle="Historial completo" icon="📄" color="#5B21B6" onClose={onClose}>
-      <div className="grid grid-cols-3 gap-3 mb-5">
-        <div className="bg-[#F0F2F5] rounded-[10px] p-3 text-center">
+    <Panel title="Historial de movimientos" subtitle="Detalle y clasificación" icon="📄" color="#5B21B6" onClose={onClose}>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        <div className="bg-[#F0F2F5] rounded-[10px] p-2.5 text-center">
           <p className="text-[10px] text-gray-400 font-medium">Operaciones</p>
-          <p className="text-[18px] font-bold text-[#072146]">{resumen.total_operaciones || 0}</p>
+          <p className="text-[16px] font-bold text-[#072146]">{resumen.total_operaciones || 0}</p>
         </div>
-        <div className="bg-[#E6F7F0] rounded-[10px] p-3 text-center">
+        <div className="bg-[#E6F7F0] rounded-[10px] p-2.5 text-center">
           <p className="text-[10px] text-[#0F6E56]/60 font-medium">Ingresos</p>
-          <p className="text-[16px] font-bold text-[#0F6E56]">S/ {totalIng.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
+          <p className="text-[14px] font-bold text-[#0F6E56]">S/ {totalIng.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
         </div>
-        <div className="bg-red-50 rounded-[10px] p-3 text-center">
+        <div className="bg-red-50 rounded-[10px] p-2.5 text-center">
           <p className="text-[10px] text-red-400 font-medium">Egresos</p>
-          <p className="text-[16px] font-bold text-[#DC2626]">S/ {totalEgr.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
+          <p className="text-[14px] font-bold text-[#DC2626]">S/ {totalEgr.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</p>
         </div>
+      </div>
+
+      {/* Clasificación de Filtros */}
+      <div className="flex flex-wrap gap-1 mb-4 bg-[#F2F4F7] p-1 rounded-xl border border-[#EAECF0]">
+        {[
+          { key: 'todos', label: 'Todos' },
+          { key: 'transferencias', label: 'Transf.' },
+          { key: 'prestamos', label: 'Préstamos' },
+          { key: 'recargas', label: 'Recargas' },
+          { key: 'otros', label: 'Otros' }
+        ].map(filter => {
+          const count = filter.key === 'todos' 
+            ? txs.length 
+            : txs.filter(t => getTxClassification(t) === filter.key).length;
+          
+          return (
+            <button
+              key={filter.key}
+              onClick={() => setActiveFilter(filter.key)}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[11px] font-bold transition-all flex-1 justify-center ${
+                activeFilter === filter.key
+                  ? 'bg-white text-[#5B21B6] shadow-sm'
+                  : 'text-gray-500 hover:text-[#5B21B6]'
+              }`}
+            >
+              {renderFilterIcon(filter.key, activeFilter === filter.key ? "w-3.5 h-3.5 text-[#5B21B6]" : "w-3.5 h-3.5 text-gray-400")}
+              <span>{filter.label}</span>
+              {count > 0 && (
+                <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                  activeFilter === filter.key ? 'bg-[#5B21B6]/15 text-[#5B21B6]' : 'bg-gray-200 text-gray-600'
+                }`}>{count}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
         <div className="text-center py-6"><span className="w-6 h-6 border-2 border-[#004481]/20 border-t-[#004481] rounded-full animate-spin inline-block" /></div>
-      ) : txs.length === 0 ? (
-        <p className="text-center text-[13px] text-gray-400 py-6">Sin movimientos registrados.</p>
+      ) : filteredTxs.length === 0 ? (
+        <p className="text-center text-[13px] text-gray-400 py-8">Sin movimientos en esta categoría.</p>
       ) : (
         <div className="max-h-[350px] overflow-y-auto divide-y divide-[#F0F2F5] -mx-1 px-1">
-          {txs.map((tx, i) => {
-            const cat = categoryStyle[tx.category] || categoryStyle.shop;
+          {filteredTxs.map((tx, i) => {
+            const classification = getTxClassification(tx);
+            // Dynamic theme selection based on category/classification
+            let cat = categoryStyle[tx.category] || categoryStyle.shop;
+            if (classification === 'prestamos') cat = { bg: '#FEF3C7', color: '#92400E' };
+            else if (classification === 'recargas') cat = { bg: '#E6F7F0', color: '#0F6E56' };
+            else if (classification === 'transferencias') cat = { bg: '#EEF3FB', color: '#004481' };
+
             const isPos = parseFloat(tx.amount) > 0;
             return (
               <div key={i} className="flex items-center gap-3 py-2.5">
-                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center text-[14px] shrink-0"
-                  style={{ background: cat.bg, color: cat.color }}>{cat.icon}</div>
+                <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0"
+                  style={{ background: cat.bg, color: cat.color }}>
+                  {renderCategoryIcon(classification, tx.category, "w-4 h-4")}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[12px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
                   <p className="text-[10px] text-gray-400">{tx.date} · {tx.canal}</p>
@@ -377,6 +554,7 @@ const PanelExtracto = ({ userDni, userToken, onClose }) => {
     </Panel>
   );
 };
+
 
 // ─── Shared UI helpers ───
 const Panel = ({ title, subtitle, icon, color, onClose, children }) => (
@@ -715,20 +893,26 @@ const Dashboard = ({ user, onLogout }) => {
     { icon: '↗', label: 'Transferir', color: '#EEF3FB', text: '#004481', key: 'transferir' },
     { icon: '💳', label: 'Préstamo', color: '#FEF3C7', text: '#92400E', key: 'prestamo' },
     { icon: '📲', label: 'Recargar', color: '#E6F7F0', text: '#0F6E56', key: 'recargar' },
-    { icon: '📄', label: 'Extracto', color: '#F5F0FF', text: '#5B21B6', key: 'extracto' },
+    { icon: '📄', label: 'Movimientos', color: '#F5F0FF', text: '#5B21B6', key: 'extracto' },
   ];
 
   return (
     <div className="min-h-screen bg-[#F2F4F7] font-sans">
       {/* ── ALERTA ENTORNO ACADÉMICO / SIMULACIÓN ── */}
       <div className="bg-amber-500 text-white text-center py-2.5 px-4 text-[12px] font-bold shadow-sm relative z-50 flex items-center justify-center gap-2">
-        <span>🎓</span>
+        <svg className="w-4.5 h-4.5 shrink-0 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.52 13.064c-.377.162-.77.304-1.177.424A9.12 9.12 0 001 18.062c0 .937.121 1.848.349 2.718A12.011 12.011 0 0012 23c2.907 0 5.598-.87 7.854-2.36a11.97 11.97 0 00.347-2.718A9.12 9.12 0 0018.5 13.5c-.407-.12-.8-.262-1.177-.424" />
+        </svg>
         <span>ATENCIÓN: Este sitio es una SIMULACIÓN ACADÉMICA de banca por internet para un proyecto de la Universidad. No es un banco real.</span>
       </div>
 
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-[#E6F7F0] border border-[#0F6E56]/20 text-[#0F6E56] px-5 py-3.5 rounded-xl shadow-2xl text-[13px] font-semibold flex items-center gap-2.5 transition-all">
-          <span className="text-[18px]">✅</span>
+          <svg className="w-5 h-5 text-[#0F6E56] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
           {toastMessage.text}
         </div>
       )}
@@ -763,7 +947,9 @@ const Dashboard = ({ user, onLogout }) => {
           >
             <div className="flex justify-between items-start gap-4">
               <div className="flex gap-3">
-                <span className="text-[20px] shrink-0">⚠️</span>
+                <svg className="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
                 <div>
                   <h3 className="text-[13.5px] font-bold text-red-800">Alerta de Seguridad: Intentos de Acceso No Autorizados</h3>
                   <p className="text-[12px] text-red-700/95 mt-1 leading-relaxed">
@@ -896,10 +1082,9 @@ const Dashboard = ({ user, onLogout }) => {
                   ? 'bg-[#004481] border-[#004481] shadow-lg shadow-[#004481]/20'
                   : 'bg-white border-[#EAECF0] hover:shadow-md hover:-translate-y-0.5'
               }`}>
-              <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-[18px] transition-all ${
-                activePanel === a.key ? 'bg-white/20' : ''
-              }`} style={activePanel === a.key ? {} : { background: a.color, color: a.text }}>
-                {a.icon}
+              <div className="w-10 h-10 rounded-[10px] flex items-center justify-center transition-all"
+                style={activePanel === a.key ? {} : { background: a.color, color: a.text }}>
+                {renderActionIcon(a.key, activePanel === a.key ? "w-5 h-5 text-white" : "w-5 h-5")}
               </div>
               <span className={`text-[11px] font-semibold ${activePanel === a.key ? 'text-white' : 'text-[#1A2B4A]'}`}>{a.label}</span>
             </button>
@@ -1081,7 +1266,9 @@ const Dashboard = ({ user, onLogout }) => {
 
                     {pr.estado === 'pendiente' && (
                       <div className="bg-[#FEF3C7]/50 rounded-xl p-3 mt-2 flex items-center gap-2">
-                        <span className="text-[14px]">⏳</span>
+                        <svg className="w-4.5 h-4.5 text-[#92400E] shrink-0 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <p className="text-[11px] text-[#92400E]">Tu solicitud está siendo evaluada por un asesor financiero. Recibirás una respuesta pronto.</p>
                       </div>
                     )}
@@ -1115,44 +1302,48 @@ const Dashboard = ({ user, onLogout }) => {
         )}
 
         {/* ÚLTIMOS MOVIMIENTOS */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden">
-          <div className="px-5 py-4 border-b border-[#EAECF0] flex items-center justify-between">
-            <p className="text-[13px] font-bold text-[#072146]">Últimos movimientos</p>
-            <span className="text-[11px] text-gray-400">{activeMovimientos.length > 0 ? `${activeMovimientos.length} operaciones` : ''}</span>
-          </div>
-          <div className="divide-y divide-[#F5F7FA]">
-            {isLoadingData ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 px-5 py-3.5 animate-pulse">
-                  <div className="w-9 h-9 rounded-[10px] bg-gray-100 flex-shrink-0" />
-                  <div className="flex-1 space-y-1.5"><div className="h-3 bg-gray-100 rounded w-1/2" /><div className="h-2.5 bg-gray-100 rounded w-1/4" /></div>
-                  <div className="h-3.5 bg-gray-100 rounded w-16" />
-                </div>
-              ))
-            ) : activeMovimientos.length === 0 ? (
-              <div className="text-center py-10"><p className="text-[13px] text-gray-400">No hay movimientos registrados aún.</p></div>
-            ) : (
-              activeMovimientos.map((tx, i) => {
-                const cat = categoryStyle[tx.category] || categoryStyle.shop;
-                const isPos = parseFloat(tx.amount) > 0;
-                return (
-                  <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
-                    <div className="w-9 h-9 rounded-[10px] flex items-center justify-center text-[15px] shrink-0"
-                      style={{ background: cat.bg, color: cat.color }}>{cat.icon}</div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
-                      <p className="text-[11px] text-gray-400 capitalize">{tx.date}</p>
-                    </div>
-                    <span className="text-[13px] font-bold font-mono shrink-0" style={{ color: isPos ? '#0F6E56' : '#DC2626' }}>
-                      {isPos ? '+' : ''}S/ {Math.abs(tx.amount).toFixed(2)}
-                    </span>
+        {activePanel !== 'extracto' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl border border-[#EAECF0] overflow-hidden">
+            <div className="px-5 py-4 border-b border-[#EAECF0] flex items-center justify-between">
+              <p className="text-[13px] font-bold text-[#072146]">Últimos movimientos</p>
+              <span className="text-[11px] text-gray-400">{activeMovimientos.length > 0 ? `${activeMovimientos.length} operaciones` : ''}</span>
+            </div>
+            <div className="divide-y divide-[#F5F7FA]">
+              {isLoadingData ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 px-5 py-3.5 animate-pulse">
+                    <div className="w-9 h-9 rounded-[10px] bg-gray-100 flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5"><div className="h-3 bg-gray-100 rounded w-1/2" /><div className="h-2.5 bg-gray-100 rounded w-1/4" /></div>
+                    <div className="h-3.5 bg-gray-100 rounded w-16" />
                   </div>
-                );
-              })
-            )}
-          </div>
-        </motion.div>
+                ))
+              ) : activeMovimientos.length === 0 ? (
+                <div className="text-center py-10"><p className="text-[13px] text-gray-400">No hay movimientos registrados aún.</p></div>
+              ) : (
+                activeMovimientos.map((tx, i) => {
+                  const cat = categoryStyle[tx.category] || categoryStyle.shop;
+                  const isPos = parseFloat(tx.amount) > 0;
+                  return (
+                    <div key={i} className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FAFBFC] transition-colors">
+                      <div className="w-9 h-9 rounded-[10px] flex items-center justify-center shrink-0"
+                        style={{ background: cat.bg, color: cat.color }}>
+                        {renderCategoryIcon(classification, tx.category, "w-4.5 h-4.5")}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-[#1A2B4A] truncate">{tx.name}</p>
+                        <p className="text-[11px] text-gray-400 capitalize">{tx.date}</p>
+                      </div>
+                      <span className="text-[13px] font-bold font-mono shrink-0" style={{ color: isPos ? '#0F6E56' : '#DC2626' }}>
+                        {isPos ? '+' : ''}S/ {Math.abs(tx.amount).toFixed(2)}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </motion.div>
+        )}
       </main>
 
       <AnimatePresence>

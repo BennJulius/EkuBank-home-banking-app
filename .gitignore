@@ -31,3 +31,8 @@ dist-ssr
 .claude/
 .gemini/
 .agents/
+
+# Private Reports
+*Informe*
+*.docx
+
